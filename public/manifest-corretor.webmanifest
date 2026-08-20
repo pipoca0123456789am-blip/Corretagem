@@ -1,0 +1,47 @@
+{
+  "id": "/dashboard",
+  "name": "ImóvelHub Corretor",
+  "short_name": "ImóvelHub",
+  "description": "Aplicativo exclusivo para corretores gerenciarem imóveis, clientes, leads, agenda e atendimentos.",
+  "start_url": "/dashboard?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#0f766e",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    { "name": "Imóveis", "url": "/imoveis", "description": "Meus imóveis" },
+    { "name": "CRM / Leads", "url": "/crm", "description": "Leads e clientes" },
+    { "name": "Agenda", "url": "/agenda", "description": "Agenda de visitas" },
+    { "name": "Meu Site", "url": "/meu-site", "description": "Site automático" }
+  ]
+}
