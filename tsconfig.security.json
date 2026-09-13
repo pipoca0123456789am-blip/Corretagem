@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "include": [
+    "next-env.d.ts",
+    "middleware.ts",
+    "instrumentation.ts",
+    "lib/server/**/*.ts",
+    "app/api/**/*.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

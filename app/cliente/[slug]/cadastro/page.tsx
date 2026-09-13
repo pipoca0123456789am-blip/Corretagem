@@ -8,7 +8,7 @@ import { Input } from '@/components/design-system/forms/input'
 import { Checkbox } from '@/components/design-system/forms/checkbox'
 import { Alert } from '@/components/design-system/feedback/alert'
 import { ClientAuthShell, useClientRealtor } from '@/components/client-portal/chrome'
-import { loginClient } from '@/lib/client-auth'
+import { registerClient } from '@/lib/client-auth'
 
 export default function ClientSignupPage() {
   const router = useRouter()
@@ -22,7 +22,7 @@ export default function ClientSignupPage() {
   if (!profile) return null
   const base = `/cliente/${slug}`
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     if (!form.name || !form.email || !form.phone || !form.password) {
@@ -38,19 +38,22 @@ export default function ClientSignupPage() {
       return
     }
     setLoading(true)
-    setTimeout(() => {
-      loginClient({
-        email: form.email,
-        password: form.password,
-        realtorSlug: profile.slug,
-        realtorId: profile.id,
-        name: form.name,
-        phone: form.phone,
-      })
-      setSuccess(true)
-      setTimeout(() => router.push(`${base}/termos`), 900)
+    const result = await registerClient({
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      password: form.password,
+      realtorSlug: profile.slug,
+      realtorId: profile.id,
+    })
+    if (!result.ok) {
+      setError(result.error)
       setLoading(false)
-    }, 800)
+      return
+    }
+    setSuccess(true)
+    setTimeout(() => router.push(`${base}/termos`), 900)
+    setLoading(false)
   }
 
   return (

@@ -117,7 +117,7 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <Breadcrumbs items={[{ label: 'Admin', href: '/admin/dashboard' }, { label: 'Centro de controle' }]} />
+      <Breadcrumbs items={[{ label: 'Admin', href: '/paineladmin' }, { label: 'Centro de controle' }]} />
       <div className="space-y-6 p-4 md:p-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>

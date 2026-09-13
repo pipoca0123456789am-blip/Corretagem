@@ -1,13 +1,45 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   images: {
     unoptimized: true,
   },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: blob: https://images.unsplash.com https://*.vercel.app",
+              "font-src 'self' data:",
+              "connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com",
+              "frame-ancestors 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+            ].join('; '),
+          },
+          ...(process.env.NODE_ENV === 'production'
+            ? [{ key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' }]
+            : []),
+        ],
+      },
+    ]
+  },
   async rewrites() {
     return [
+      // Painel admin (URL pública distinta do /dashboard do corretor)
+      { source: '/paineladmin', destination: '/admin/dashboard' },
       // URLs curtas do site automático do corretor: /slug → /corretor/slug
       // Rotas de app existentes (login, dashboard, admin…) têm prioridade sobre rewrites.
       { source: '/:slug/imoveis', destination: '/corretor/:slug/imoveis' },
@@ -24,6 +56,9 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      // Home admin: URL pública /paineladmin (mantém /dashboard só para corretor)
+      { source: '/admin/dashboard', destination: '/paineladmin', permanent: false },
+
       // Admin PT → rotas internas existentes
       { source: '/admin/corretores', destination: '/admin/realtors', permanent: false },
       { source: '/admin/corretores/:id', destination: '/admin/realtors/:id', permanent: false },
@@ -43,12 +78,14 @@ const nextConfig = {
       { source: '/admin/comunicacao', destination: '/admin/communication', permanent: false },
       { source: '/admin/relatorios', destination: '/admin/reports', permanent: false },
       { source: '/admin/auditoria', destination: '/admin/audit', permanent: false },
+      { source: '/admin/leads-acessos', destination: '/admin/leads', permanent: false },
+      { source: '/admin/acessos', destination: '/admin/leads', permanent: false },
       { source: '/admin/configuracoes', destination: '/admin/settings', permanent: false },
 
       // Corretor PT → rotas existentes (módulos preservados)
       { source: '/cadastro', destination: '/signup', permanent: false },
       { source: '/esqueci-senha', destination: '/forgot-password', permanent: false },
-      { source: '/redefinir-senha', destination: '/forgot-password', permanent: false },
+      { source: '/redefinir-senha', destination: '/reset-password', permanent: false },
       { source: '/imoveis', destination: '/properties', permanent: false },
       { source: '/imoveis/:path*', destination: '/properties/:path*', permanent: false },
       { source: '/clientes', destination: '/clients', permanent: false },

@@ -16,7 +16,7 @@ export default function RealtorsPage() {
   const [selectedRealtor, setSelectedRealtor] = useState<(typeof realtorsList)[0] | null>(null)
 
   const breadcrumbItems = [
-    { label: 'Admin', href: '/admin/dashboard' },
+    { label: 'Admin', href: '/paineladmin' },
     { label: 'Corretores', href: '/admin/realtors' },
   ]
 

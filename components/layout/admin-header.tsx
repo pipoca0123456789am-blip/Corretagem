@@ -41,8 +41,8 @@ export function AdminHeader() {
           <button
             type="button"
             className="rounded-lg bg-amber-500/20 px-3 py-1.5 text-xs font-medium text-amber-300 hover:bg-amber-500/30"
-            onClick={() => {
-              logoutAdmin()
+            onClick={async () => {
+              await logoutAdmin()
               window.location.href = '/admin/login'
             }}
           >

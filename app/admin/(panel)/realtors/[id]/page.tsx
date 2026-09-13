@@ -94,7 +94,7 @@ export default function AdminRealtorDetailPage() {
     <div>
       <Breadcrumbs
         items={[
-          { label: 'Admin', href: '/admin/dashboard' },
+          { label: 'Admin', href: '/paineladmin' },
           { label: 'Corretores', href: '/admin/realtors' },
           { label: realtor.name },
         ]}

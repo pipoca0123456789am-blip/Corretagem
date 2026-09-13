@@ -1,5 +1,5 @@
 /* ImóvelHub Corretor — Service Worker (cache seguro, sem dados de outros usuários) */
-const VERSION = 'imovelhub-corretor-v1'
+const VERSION = 'imovelhub-corretor-v2'
 const PRECACHE = [
   '/offline',
   '/manifest-corretor.webmanifest',
@@ -35,11 +35,54 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url)
   if (url.origin !== self.location.origin) return
 
-  // Nunca cachear painéis autenticados sensíveis como fallback de dados de terceiros
-  const sensitive =
-    url.pathname.startsWith('/admin') ||
-    url.pathname.startsWith('/api') ||
-    url.pathname.startsWith('/cliente')
+  // Nunca cachear painéis autenticados / APIs / rotas privadas
+  const sensitivePrefixes = [
+    '/admin',
+    '/paineladmin',
+    '/api',
+    '/cliente',
+    '/dashboard',
+    '/properties',
+    '/imoveis',
+    '/clients',
+    '/clientes',
+    '/crm',
+    '/agenda',
+    '/visits',
+    '/visitas',
+    '/negotiations',
+    '/negociacoes',
+    '/financial',
+    '/financeiro',
+    '/professional',
+    '/minha-pagina',
+    '/ai',
+    '/minha-ia',
+    '/plans',
+    '/assinatura',
+    '/help',
+    '/suporte',
+    '/settings',
+    '/configuracoes',
+    '/profile',
+    '/reports',
+    '/documents',
+    '/team',
+    '/solicitacoes',
+    '/notificacoes',
+    '/integrations',
+    '/campanhas',
+    '/onboarding',
+    '/meu-site',
+    '/login',
+    '/signup',
+    '/forgot-password',
+    '/reset-password',
+  ]
+
+  const sensitive = sensitivePrefixes.some(
+    (p) => url.pathname === p || url.pathname.startsWith(`${p}/`)
+  )
 
   if (sensitive) {
     event.respondWith(

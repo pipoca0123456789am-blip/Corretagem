@@ -77,7 +77,7 @@ export default function AdminSupportPage() {
     <div>
       <Breadcrumbs
         items={[
-          { label: isAgent ? 'Suporte' : 'Admin', href: isAgent ? '/admin/support' : '/admin/dashboard' },
+          { label: isAgent ? 'Suporte' : 'Admin', href: isAgent ? '/admin/support' : '/paineladmin' },
           { label: 'Suporte' },
         ]}
       />

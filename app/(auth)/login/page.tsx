@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/design-system/buttons/button'
@@ -8,40 +8,58 @@ import { Input } from '@/components/design-system/forms/input'
 import { Checkbox } from '@/components/design-system/forms/checkbox'
 import { Alert } from '@/components/design-system/feedback/alert'
 import { Eye, EyeOff } from 'lucide-react'
-import { ensureCleanDevSeed, loginApp } from '@/lib/auth'
+import { isDevSeedUiEnabled } from '@/lib/auth-public'
 
 function LoginForm() {
   const router = useRouter()
   const params = useSearchParams()
-  const [email, setEmail] = useState('corretor@plataforma.com.br')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [hintAdmin, setHintAdmin] = useState(false)
+  const showSeed = isDevSeedUiEnabled()
 
   useEffect(() => {
-    ensureCleanDevSeed()
-  }, [])
+    if (showSeed) setEmail('corretor@plataforma.com.br')
+  }, [showSeed])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setHintAdmin(false)
     setLoading(true)
-    setTimeout(() => {
-      const result = loginApp(email, password)
-      setLoading(false)
-      if (!result.ok) {
-        setError(result.error)
-        setHintAdmin(!!result.hintAdmin)
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          next: params.get('next') || undefined,
+        }),
+      })
+      const data = (await res.json()) as {
+        ok?: boolean
+        error?: string
+        hintAdmin?: boolean
+        redirectTo?: string
+      }
+      if (!res.ok || !data.ok) {
+        setError(data.error || 'Não foi possível entrar')
+        setHintAdmin(!!data.hintAdmin)
         return
       }
       void rememberMe
-      const next = params.get('next')
-      router.push(next || result.redirectTo)
-    }, 500)
+      router.push(data.redirectTo || '/dashboard')
+      router.refresh()
+    } catch {
+      setError('Falha de rede. Tente novamente.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -74,10 +92,11 @@ function LoginForm() {
             <label className="mb-2 block text-sm font-medium text-foreground">E-mail</label>
             <Input
               type="email"
-              placeholder="corretor@plataforma.com.br"
+              placeholder="seu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
+              autoComplete="username"
             />
           </div>
 
@@ -90,6 +109,7 @@ function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
+                autoComplete="current-password"
               />
               <button
                 type="button"
@@ -125,17 +145,22 @@ function LoginForm() {
           </div>
         </form>
 
-        <div className="mt-8 rounded-lg border border-info bg-info/10 p-4">
-          <p className="mb-2 text-xs font-medium text-info">Demonstração (desenvolvimento)</p>
-          <ul className="space-y-1 text-xs text-muted-foreground">
-            <li>
-              Corretor: <span className="text-foreground">corretor@plataforma.com.br</span> / Corretor@123456
-            </li>
-            <li>
-              Admin: use <Link href="/admin/login" className="text-primary underline">/admin/login</Link>
-            </li>
-          </ul>
-        </div>
+        {showSeed ? (
+          <div className="mt-8 rounded-lg border border-info bg-info/10 p-4">
+            <p className="mb-2 text-xs font-medium text-info">Demonstração (somente desenvolvimento)</p>
+            <ul className="space-y-1 text-xs text-muted-foreground">
+              <li>
+                Corretor: <span className="text-foreground">corretor@plataforma.com.br</span> / Corretor@123456
+              </li>
+              <li>
+                Admin: use{' '}
+                <Link href="/admin/login" className="text-primary underline">
+                  /admin/login
+                </Link>
+              </li>
+            </ul>
+          </div>
+        ) : null}
       </div>
     </div>
   )

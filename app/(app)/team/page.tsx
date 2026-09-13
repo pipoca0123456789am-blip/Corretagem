@@ -8,7 +8,6 @@ import { Badge } from '@/components/design-system/feedback/badge'
 
 const members = [
   { name: 'Você (titular)', role: 'Corretor', status: 'Ativo' },
-  { name: 'Assistente comercial', role: 'Usuário adicional', status: 'Pendente' },
 ]
 
 export default function TeamPage() {

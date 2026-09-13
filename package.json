@@ -6,33 +6,47 @@
     "dev": "next dev --webpack -p 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "typecheck:security": "tsc --noEmit -p tsconfig.security.json"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
+    "@supabase/supabase-js": "^2.112.3",
+    "@upstash/redis": "^1.38.2",
     "@vercel/analytics": "1.6.1",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "ioredis": "^6.0.0",
+    "jose": "^6.2.9",
     "lucide-react": "^1.16.0",
-    "next": "16.2.6",
+    "next": "16.2.11",
+    "otpauth": "^9.5.1",
+    "pg": "^8.23.0",
+    "qrcode": "^1.5.4",
     "react": "^19",
     "react-dom": "^19",
     "shadcn": "^4.8.0",
     "tailwind-merge": "^3.3.1",
-    "tw-animate-css": "^1.4.0"
+    "tw-animate-css": "^1.4.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/ioredis": "^5.0.0",
     "@types/node": "^24",
+    "@types/pg": "^8.23.1",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "postcss": "^8.5",
+    "supabase": "^2.115.0",
     "tailwindcss": "^4.3.3",
-    "typescript": "5.7.3"
-  },
-  "pnpm": {
-    "overrides": {
-      "hono": "4.12.25"
-    }
+    "typescript": "5.7.3",
+    "vitest": "^4.1.11"
   }
 }

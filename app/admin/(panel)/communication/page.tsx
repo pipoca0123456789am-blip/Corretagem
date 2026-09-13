@@ -13,7 +13,7 @@ export default function CommunicationPage() {
 
   return (
     <div>
-      <Breadcrumbs items={[{ label: 'Admin', href: '/admin/dashboard' }, { label: 'Comunicação' }]} />
+      <Breadcrumbs items={[{ label: 'Admin', href: '/paineladmin' }, { label: 'Comunicação' }]} />
       <div className="mx-auto max-w-2xl space-y-6 p-4 md:p-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground md:text-3xl">Comunicação</h1>

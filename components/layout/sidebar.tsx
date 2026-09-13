@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
-import { logoutApp } from '@/lib/auth'
 import { MENU_FEATURE_MAP, isFeatureIncludedInPlan, type FeatureId } from '@/lib/plan-access'
 import { getEffectivePlanId, getRealtorSubscription } from '@/lib/phase14-data'
 import { LockedMenuItem, UpgradeLockModal } from '@/components/billing/feature-lock'
@@ -113,8 +112,8 @@ export function Sidebar() {
           <button
             type="button"
             className="w-full rounded-lg px-4 py-2 text-left text-sm text-sidebar-foreground hover:bg-sidebar-accent/20"
-            onClick={() => {
-              logoutApp()
+            onClick={async () => {
+              await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
               window.location.href = '/login'
             }}
           >

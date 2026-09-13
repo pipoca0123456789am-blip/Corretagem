@@ -1,7 +1,12 @@
-export type UserRole = 'super_admin' | 'corretor' | 'cliente'
+/**
+ * Portal do cliente — UI helpers.
+ * Auth autoritativa: JWT HttpOnly `ih_client_sid` + middleware + /api/auth/me.
+ * Prefs (favoritos etc.) permanecem em localStorage (não são credenciais).
+ * NUNCA usar localStorage como prova de autenticação.
+ */
 
 const CLIENT_KEYS = {
-  auth: 'clientAuthenticated',
+  profile: 'ih_client_profile',
   email: 'clientEmail',
   name: 'clientName',
   phone: 'clientPhone',
@@ -10,13 +15,15 @@ const CLIENT_KEYS = {
   terms: 'clientTermsAccepted',
   onboarding: 'clientOnboardingComplete',
   financialConsent: 'clientFinancialConsent',
-  qualification: 'clientQualification',
   favorites: 'clientFavorites',
   compare: 'clientCompare',
   discarded: 'clientDiscarded',
   viewed: 'clientViewed',
-  profile: 'clientProfile',
+  qualification: 'clientQualification',
+  profileJson: 'clientProfile',
   financial: 'clientFinancial',
+  /** legado forjável — limpo, nunca usado para auth */
+  authLegacy: 'clientAuthenticated',
 } as const
 
 export interface ClientSession {
@@ -30,53 +37,232 @@ export interface ClientSession {
   financialConsent: boolean
 }
 
+interface ClientProfileCache {
+  userId: string
+  email: string
+  name: string
+  realtorSlug: string
+  realtorId: number
+  realm: 'client'
+  /** Epoch ms da última sincronização com /api/auth/me */
+  syncedAt?: number
+}
+
 function canUseStorage() {
   return typeof window !== 'undefined'
 }
 
-export function loginClient(params: {
+function scrubLegacyAuthFlag() {
+  if (!canUseStorage()) return
+  localStorage.removeItem(CLIENT_KEYS.authLegacy)
+  localStorage.removeItem('isAuthenticated')
+}
+
+function writeProfileCache(profile: ClientProfileCache) {
+  if (!canUseStorage()) return
+  scrubLegacyAuthFlag()
+  localStorage.setItem(
+    CLIENT_KEYS.profile,
+    JSON.stringify({ ...profile, syncedAt: Date.now() })
+  )
+  localStorage.setItem(CLIENT_KEYS.email, profile.email)
+  localStorage.setItem(CLIENT_KEYS.name, profile.name)
+  localStorage.setItem(CLIENT_KEYS.realtorSlug, profile.realtorSlug)
+  localStorage.setItem(CLIENT_KEYS.realtorId, String(profile.realtorId))
+  localStorage.setItem('userEmail', profile.email)
+  localStorage.setItem('userName', profile.name)
+}
+
+function readProfileCache(): ClientProfileCache | null {
+  if (!canUseStorage()) return null
+  scrubLegacyAuthFlag()
+  try {
+    const raw = localStorage.getItem(CLIENT_KEYS.profile)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as ClientProfileCache
+    if (parsed.realm !== 'client' || !parsed.email) return null
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+function clearProfileCache() {
+  if (!canUseStorage()) return
+  localStorage.removeItem(CLIENT_KEYS.profile)
+  localStorage.removeItem('userRole')
+}
+
+/** Login via API assinada (cookie HttpOnly). */
+export async function loginClient(params: {
   email: string
   password: string
   realtorSlug: string
   realtorId: number
   name?: string
   phone?: string
-}): boolean {
-  if (!canUseStorage()) return false
-  if (!params.email || !params.password) return false
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!canUseStorage()) return { ok: false, error: 'Indisponível' }
+  if (!params.email || !params.password) {
+    return { ok: false, error: 'Informe e-mail e senha para entrar.' }
+  }
 
   const existingSlug = localStorage.getItem(CLIENT_KEYS.realtorSlug)
   if (existingSlug && existingSlug !== params.realtorSlug) {
-    // Troca de corretor = nova sessão isolada
     clearClientLists()
   }
 
-  localStorage.setItem(CLIENT_KEYS.auth, 'true')
-  localStorage.setItem(CLIENT_KEYS.email, params.email)
-  localStorage.setItem(CLIENT_KEYS.name, params.name || params.email.split('@')[0])
-  localStorage.setItem(CLIENT_KEYS.phone, params.phone || '')
-  localStorage.setItem(CLIENT_KEYS.realtorSlug, params.realtorSlug)
-  localStorage.setItem(CLIENT_KEYS.realtorId, String(params.realtorId))
-  localStorage.setItem('userRole', 'cliente')
-  localStorage.setItem('isAuthenticated', 'true')
-  localStorage.setItem('userEmail', params.email)
-  localStorage.setItem('userName', params.name || params.email.split('@')[0])
-  return true
+  try {
+    const res = await fetch('/api/auth/client/login', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: params.email,
+        password: params.password,
+        realtorSlug: params.realtorSlug,
+      }),
+    })
+    const data = (await res.json()) as {
+      ok?: boolean
+      error?: string
+      user?: { id: string; email: string; name: string }
+      realtorSlug?: string
+      realtorId?: number
+    }
+    if (!res.ok || !data.ok || !data.user) {
+      return { ok: false, error: data.error || 'Falha no login.' }
+    }
+
+    writeProfileCache({
+      userId: data.user.id,
+      email: data.user.email,
+      name: data.user.name || params.name || params.email.split('@')[0],
+      realtorSlug: data.realtorSlug || params.realtorSlug,
+      realtorId: data.realtorId ?? params.realtorId,
+      realm: 'client',
+    })
+    if (params.phone) localStorage.setItem(CLIENT_KEYS.phone, params.phone)
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'Não foi possível entrar. Tente novamente.' }
+  }
 }
 
+/** Cadastro + sessão (DEV seed ativa imediatamente). */
+export async function registerClient(params: {
+  name: string
+  email: string
+  phone: string
+  password: string
+  realtorSlug: string
+  realtorId: number
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const res = await fetch('/api/auth/client/register', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: params.name,
+        email: params.email,
+        phone: params.phone,
+        password: params.password,
+        realtorSlug: params.realtorSlug,
+      }),
+    })
+    const data = (await res.json()) as {
+      ok?: boolean
+      error?: string
+      user?: { id: string; email: string; name: string }
+      realtorSlug?: string
+      realtorId?: number
+      needsEmailVerification?: boolean
+    }
+    if (!res.ok || !data.ok || !data.user) {
+      return { ok: false, error: data.error || 'Falha no cadastro.' }
+    }
+    if (data.needsEmailVerification) {
+      return {
+        ok: false,
+        error:
+          'Conta criada. Confirme o e-mail antes de entrar (verifique sua caixa de entrada).',
+      }
+    }
+    writeProfileCache({
+      userId: data.user.id,
+      email: data.user.email,
+      name: data.user.name,
+      realtorSlug: data.realtorSlug || params.realtorSlug,
+      realtorId: data.realtorId ?? params.realtorId,
+      realm: 'client',
+    })
+    localStorage.setItem(CLIENT_KEYS.phone, params.phone)
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'Não foi possível cadastrar. Tente novamente.' }
+  }
+}
+
+/** Sincroniza cache UI com /api/auth/me (cookie). Fonte de verdade. */
+export async function syncClientSessionFromServer(
+  realtorSlugHint?: string
+): Promise<ClientProfileCache | null> {
+  try {
+    const res = await fetch('/api/auth/me', { credentials: 'same-origin' })
+    if (!res.ok) {
+      clearProfileCache()
+      return null
+    }
+    const data = (await res.json()) as {
+      ok?: boolean
+      realm?: string
+      session?: { userId: string; email: string; name: string; realtorId: number | null }
+      user?: { id: string; email: string; name: string }
+    }
+    if (!data.ok || data.realm !== 'client' || !data.session) {
+      if (data.realm === 'admin') return null
+      clearProfileCache()
+      return null
+    }
+    const slug =
+      realtorSlugHint ||
+      (canUseStorage() && localStorage.getItem(CLIENT_KEYS.realtorSlug)) ||
+      ''
+    const profile: ClientProfileCache = {
+      userId: data.session.userId,
+      email: data.session.email,
+      name: data.session.name,
+      realtorSlug: slug,
+      realtorId: data.session.realtorId ?? 0,
+      realm: 'client',
+    }
+    writeProfileCache(profile)
+    return profile
+  } catch {
+    return null
+  }
+}
+
+/**
+ * @deprecated NÃO usar como SoT de auth — preferir syncClientSessionFromServer / middleware.
+ * Cache UI só conta após sync recente com o servidor.
+ */
 export function isClientAuthenticated(): boolean {
-  if (!canUseStorage()) return false
-  return localStorage.getItem(CLIENT_KEYS.auth) === 'true'
+  const profile = readProfileCache()
+  if (!profile?.syncedAt) return false
+  return Date.now() - profile.syncedAt < 5 * 60 * 1000
 }
 
 export function getClientSession(): ClientSession | null {
-  if (!isClientAuthenticated()) return null
+  const profile = readProfileCache()
+  if (!profile) return null
   return {
-    email: localStorage.getItem(CLIENT_KEYS.email) || '',
-    name: localStorage.getItem(CLIENT_KEYS.name) || '',
-    phone: localStorage.getItem(CLIENT_KEYS.phone) || '',
-    realtorSlug: localStorage.getItem(CLIENT_KEYS.realtorSlug) || '',
-    realtorId: Number(localStorage.getItem(CLIENT_KEYS.realtorId) || 0),
+    email: profile.email,
+    name: profile.name,
+    phone: (canUseStorage() && localStorage.getItem(CLIENT_KEYS.phone)) || '',
+    realtorSlug: profile.realtorSlug || localStorage.getItem(CLIENT_KEYS.realtorSlug) || '',
+    realtorId: profile.realtorId,
     termsAccepted: localStorage.getItem(CLIENT_KEYS.terms) === 'true',
     onboardingComplete: localStorage.getItem(CLIENT_KEYS.onboarding) === 'true',
     financialConsent: localStorage.getItem(CLIENT_KEYS.financialConsent) === 'true',
@@ -98,15 +284,17 @@ export function setFinancialConsent(value: boolean) {
   localStorage.setItem(CLIENT_KEYS.financialConsent, value ? 'true' : 'false')
 }
 
-export function logoutClient() {
+export async function logoutClient(): Promise<void> {
   if (!canUseStorage()) return
-  Object.values(CLIENT_KEYS).forEach((key) => localStorage.removeItem(key))
-  if (localStorage.getItem('userRole') === 'cliente') {
-    localStorage.removeItem('isAuthenticated')
-    localStorage.removeItem('userEmail')
-    localStorage.removeItem('userName')
-    localStorage.removeItem('userRole')
+  try {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
+  } catch {
+    /* ignore */
   }
+  Object.values(CLIENT_KEYS).forEach((key) => localStorage.removeItem(key))
+  localStorage.removeItem('userEmail')
+  localStorage.removeItem('userName')
+  localStorage.removeItem('userRole')
 }
 
 function clearClientLists() {
@@ -115,7 +303,7 @@ function clearClientLists() {
   localStorage.removeItem(CLIENT_KEYS.discarded)
   localStorage.removeItem(CLIENT_KEYS.viewed)
   localStorage.removeItem(CLIENT_KEYS.qualification)
-  localStorage.removeItem(CLIENT_KEYS.profile)
+  localStorage.removeItem(CLIENT_KEYS.profileJson)
   localStorage.removeItem(CLIENT_KEYS.financial)
   localStorage.removeItem(CLIENT_KEYS.terms)
   localStorage.removeItem(CLIENT_KEYS.onboarding)
@@ -201,7 +389,7 @@ export function saveJson<T>(key: 'qualification' | 'profile' | 'financial', valu
   if (!canUseStorage()) return
   const map = {
     qualification: CLIENT_KEYS.qualification,
-    profile: CLIENT_KEYS.profile,
+    profile: CLIENT_KEYS.profileJson,
     financial: CLIENT_KEYS.financial,
   }
   localStorage.setItem(map[key], JSON.stringify(value))
@@ -211,7 +399,7 @@ export function loadJson<T>(key: 'qualification' | 'profile' | 'financial', fall
   if (!canUseStorage()) return fallback
   const map = {
     qualification: CLIENT_KEYS.qualification,
-    profile: CLIENT_KEYS.profile,
+    profile: CLIENT_KEYS.profileJson,
     financial: CLIENT_KEYS.financial,
   }
   try {
@@ -222,17 +410,31 @@ export function loadJson<T>(key: 'qualification' | 'profile' | 'financial', fall
   }
 }
 
-/** Super Admin pode inspecionar qualquer área de cliente sem sessão cliente. */
+/**
+ * UI gate — middleware já exige cookie. Cache só após sync com servidor.
+ */
 export function canAccessClientPortal(realtorSlug: string): boolean {
   if (!canUseStorage()) return false
-  if (localStorage.getItem('userRole') === 'super_admin' && localStorage.getItem('isAuthenticated') === 'true') {
-    return true
-  }
+  if (isAdminViewingClient()) return true
   const session = getClientSession()
-  return Boolean(session && session.realtorSlug === realtorSlug)
+  if (!session || session.realtorSlug !== realtorSlug) return false
+  return isClientAuthenticated()
 }
 
 export function isAdminViewingClient(): boolean {
   if (!canUseStorage()) return false
-  return localStorage.getItem('userRole') === 'super_admin' && localStorage.getItem('isAuthenticated') === 'true'
+  try {
+    const raw = localStorage.getItem('ih_admin_profile')
+    if (!raw) return false
+    const parsed = JSON.parse(raw) as { realm?: string; role?: string }
+    return (
+      parsed.realm === 'admin' &&
+      (parsed.role === 'super_admin' ||
+        parsed.role === 'admin' ||
+        parsed.role === 'suporte' ||
+        parsed.role === 'financeiro')
+    )
+  } catch {
+    return false
+  }
 }

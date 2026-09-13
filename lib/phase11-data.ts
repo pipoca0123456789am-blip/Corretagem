@@ -186,117 +186,31 @@ export const onboardingSteps = [
 ]
 
 export const demoClient = {
-  email: 'ana.cliente@email.com',
-  password: 'senha123',
-  name: 'Ana Paula Mendes',
-  phone: '(11) 98888-1122',
-  realtorSlug: 'marina-costa-santos',
+  email: 'cliente@plataforma.com.br',
+  password: 'Cliente@123456',
+  name: 'Cliente Demonstração',
+  phone: '',
+  realtorSlug: 'corretor-demonstracao',
 }
 
-export function getClientVisits(realtorId: number): ClientVisit[] {
-  const props = getRealtorProperties(realtorId)
-  if (props.length === 0) return []
-  return [
-    {
-      id: 'v1',
-      propertyId: props[0].id,
-      propertyTitle: props[0].title,
-      date: '2026-08-02',
-      time: '10:30',
-      status: 'confirmada',
-    },
-    {
-      id: 'v2',
-      propertyId: props[1]?.id || props[0].id,
-      propertyTitle: props[1]?.title || props[0].title,
-      date: '2026-08-05',
-      time: '16:00',
-      status: 'agendada',
-    },
-  ]
+export function getClientVisits(_realtorId: number): ClientVisit[] {
+  return []
 }
 
-export function getClientProposals(realtorId: number): ClientProposal[] {
-  const props = getRealtorProperties(realtorId).filter((p) => p.purpose !== 'aluguel')
-  if (props.length === 0) return []
-  return [
-    {
-      id: 'pr1',
-      propertyId: props[0].id,
-      propertyTitle: props[0].title,
-      value: Math.round(props[0].price * 0.95),
-      status: 'em_analise',
-      createdAt: '2026-07-20',
-      message: 'Proposta com entrada de 20% e financiamento do saldo.',
-    },
-  ]
+export function getClientProposals(_realtorId: number): ClientProposal[] {
+  return []
 }
 
 export function getClientDocuments(): ClientDocument[] {
-  return [
-    { id: 'd1', name: 'RG e CPF.pdf', category: 'Identificação', status: 'aprovado', updatedAt: '2026-07-18' },
-    { id: 'd2', name: 'Comprovante de renda.pdf', category: 'Financeiro', status: 'em_analise', updatedAt: '2026-07-22' },
-    { id: 'd3', name: 'IRPF 2025.pdf', category: 'Financeiro', status: 'pendente', updatedAt: '2026-07-25' },
-  ]
+  return []
 }
 
-export function getClientMessages(realtorName: string): ClientMessage[] {
-  return [
-    {
-      id: 'm1',
-      from: 'corretor',
-      text: `Olá! Sou ${realtorName}. Já separei opções alinhadas ao seu perfil.`,
-      at: '2026-07-21 09:12',
-      read: true,
-    },
-    {
-      id: 'm2',
-      from: 'cliente',
-      text: 'Obrigada! Prefiro visitar no período da tarde.',
-      at: '2026-07-21 10:05',
-      read: true,
-    },
-    {
-      id: 'm3',
-      from: 'corretor',
-      text: 'Perfeito. Posso confirmar visita na terça às 16h.',
-      at: '2026-07-21 11:40',
-      read: false,
-    },
-  ]
+export function getClientMessages(_realtorName: string): ClientMessage[] {
+  return []
 }
 
-export function getClientHistory(realtorName: string): ClientHistoryItem[] {
-  return [
-    {
-      id: 'h1',
-      label: 'Preferências atualizadas',
-      detail: 'Faixa de preço e bairros revisados',
-      at: '2026-07-25 14:20',
-      type: 'preferencia',
-    },
-    {
-      id: 'h2',
-      label: 'Documento enviado',
-      detail: 'Comprovante de renda.pdf',
-      at: '2026-07-22 16:05',
-      type: 'documento',
-    },
-    {
-      id: 'h3',
-      label: 'Proposta registrada',
-      detail: 'Aguardando retorno do corretor',
-      at: '2026-07-20 11:30',
-      type: 'proposta',
-    },
-    {
-      id: 'h4',
-      label: `Mensagem de ${realtorName}`,
-      detail: 'Sugestão de visita confirmada',
-      at: '2026-07-21 11:40',
-      type: 'mensagem',
-    },
-  ]
+export function getClientHistory(_realtorName: string): ClientHistoryItem[] {
+  return []
 }
 
 export function matchProperties(

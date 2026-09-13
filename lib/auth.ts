@@ -1,7 +1,7 @@
 /**
- * Autenticação dual (Super Admin × App Corretor/Cliente).
- * Sessões isoladas via cookies + localStorage.
- * Protótipo sem backend — credenciais apenas para desenvolvimento.
+ * Helpers de autenticação no cliente (UI only).
+ * Fonte de verdade = JWT HttpOnly (`ih_admin_sid` / `ih_app_sid`) + middleware + /api/auth/me.
+ * Nunca grava senha; cookies legados forjáveis são limpos, não emitidos.
  */
 
 export type UserRole =
@@ -15,23 +15,25 @@ export type UserRole =
 
 export type AuthRealm = 'admin' | 'app'
 
-export interface AuthUser {
+/** Perfil público para UI (sem senha). */
+export interface PublicAuthUser {
   id: string
   name: string
   email: string
-  password: string
   role: UserRole
   status: 'ativo' | 'inativo'
-  /** Vincula corretor/assistente ao tenant (realtorId) */
   realtorId: number | null
 }
 
-export const DEV_SEED_USERS: AuthUser[] = [
+/** @deprecated Use PublicAuthUser — senha removida do cliente */
+export type AuthUser = PublicAuthUser
+
+/** E-mails de demo (sem senhas no bundle). Senhas só no server seed. */
+export const DEV_SEED_USERS: PublicAuthUser[] = [
   {
     id: 'u-admin-1',
     name: 'Administrador Principal',
     email: 'admin@plataforma.com.br',
-    password: 'Admin@123456',
     role: 'super_admin',
     status: 'ativo',
     realtorId: null,
@@ -40,7 +42,6 @@ export const DEV_SEED_USERS: AuthUser[] = [
     id: 'u-corretor-1',
     name: 'Corretor Demonstração',
     email: 'corretor@plataforma.com.br',
-    password: 'Corretor@123456',
     role: 'corretor',
     status: 'ativo',
     realtorId: 1,
@@ -49,17 +50,16 @@ export const DEV_SEED_USERS: AuthUser[] = [
     id: 'u-cliente-1',
     name: 'Cliente Demonstração',
     email: 'cliente@plataforma.com.br',
-    password: 'Cliente@123456',
     role: 'cliente',
     status: 'ativo',
     realtorId: 1,
   },
 ]
 
-const ADMIN_COOKIE = 'ih_admin_session'
-const APP_COOKIE = 'ih_app_session'
-const ADMIN_LS = 'ih_admin_auth'
-const APP_LS = 'ih_app_auth'
+const LEGACY_ADMIN_COOKIE = 'ih_admin_session'
+const LEGACY_APP_COOKIE = 'ih_app_session'
+const ADMIN_LS = 'ih_admin_profile'
+const APP_LS = 'ih_app_profile'
 
 export interface SessionPayload {
   userId: string
@@ -70,52 +70,80 @@ export interface SessionPayload {
   realm: AuthRealm
 }
 
-function setCookie(name: string, value: string, days = 7) {
-  if (typeof document === 'undefined') return
-  const maxAge = days * 24 * 60 * 60
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax`
-}
-
 function clearCookie(name: string) {
   if (typeof document === 'undefined') return
   document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`
 }
 
-function readCookie(name: string): string | null {
-  if (typeof document === 'undefined') return null
-  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`))
-  return match ? decodeURIComponent(match[1]) : null
+function scrubLegacyAuthArtifacts() {
+  if (typeof window === 'undefined') return
+  clearCookie(LEGACY_ADMIN_COOKIE)
+  clearCookie(LEGACY_APP_COOKIE)
+  localStorage.removeItem('ih_admin_auth')
+  localStorage.removeItem('ih_app_auth')
+  localStorage.removeItem('ih_registered_users')
+  localStorage.removeItem('pendingSignup')
+  localStorage.removeItem('isAuthenticated')
 }
 
-function persistSession(realm: AuthRealm, session: SessionPayload) {
-  const key = realm === 'admin' ? ADMIN_LS : APP_LS
-  const cookie = realm === 'admin' ? ADMIN_COOKIE : APP_COOKIE
-  const raw = JSON.stringify(session)
-  localStorage.setItem(key, raw)
-  setCookie(cookie, raw)
+/** Cache de perfil para UI (não autoriza rotas). */
+export function cachePublicSession(session: SessionPayload): void {
+  if (typeof window === 'undefined') return
+  scrubLegacyAuthArtifacts()
+  const key = session.realm === 'admin' ? ADMIN_LS : APP_LS
+  localStorage.setItem(key, JSON.stringify(session))
+  if (session.realm === 'app' && (session.role === 'corretor' || session.role === 'assistente')) {
+    localStorage.setItem('userEmail', session.email)
+    localStorage.setItem('userName', session.name)
+    // Prefs de UI — NÃO são prova de autenticação (middleware + cookie são)
+    localStorage.setItem('onboardingComplete', 'true')
+  }
 }
 
-function clearSession(realm: AuthRealm) {
+function clearProfile(realm: AuthRealm) {
   const key = realm === 'admin' ? ADMIN_LS : APP_LS
-  const cookie = realm === 'admin' ? ADMIN_COOKIE : APP_COOKIE
   localStorage.removeItem(key)
-  clearCookie(cookie)
+  clearCookie(LEGACY_ADMIN_COOKIE)
+  clearCookie(LEGACY_APP_COOKIE)
 }
 
-function readSession(realm: AuthRealm): SessionPayload | null {
+function readProfile(realm: AuthRealm): SessionPayload | null {
   if (typeof window === 'undefined') return null
   try {
+    scrubLegacyAuthArtifacts()
     const key = realm === 'admin' ? ADMIN_LS : APP_LS
-    const cookie = realm === 'admin' ? ADMIN_COOKIE : APP_COOKIE
-    const raw = localStorage.getItem(key) || readCookie(cookie)
+    const raw = localStorage.getItem(key)
     if (!raw) return null
-    return JSON.parse(raw) as SessionPayload
+    const parsed = JSON.parse(raw) as SessionPayload
+    if (parsed.realm !== realm) return null
+    return parsed
   } catch {
     return null
   }
 }
 
-export function findDevUser(email: string): AuthUser | undefined {
+async function serverLogout(): Promise<void> {
+  try {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Cadastro legado — DESATIVADO. Use POST /api/auth/register */
+export function registerRealtor(_input: {
+  firstName: string
+  lastName: string
+  email: string
+  password: string
+}): { ok: false; error: string } {
+  return {
+    ok: false,
+    error: 'Cadastro client-side desativado. Use o fluxo /cadastro com verificação de e-mail.',
+  }
+}
+
+export function findDevUser(email: string): PublicAuthUser | undefined {
   return DEV_SEED_USERS.find((u) => u.email.toLowerCase() === email.trim().toLowerCase())
 }
 
@@ -127,103 +155,49 @@ export function isRealtorAppRole(role: UserRole): boolean {
   return role === 'corretor' || role === 'assistente'
 }
 
-/** Login exclusivo do ambiente Super Admin (/admin/login) */
+/** @deprecated Use POST /api/auth/admin/login */
 export function loginAdmin(
-  email: string,
-  password: string
-): { ok: true; user: AuthUser } | { ok: false; error: string } {
-  if (typeof window === 'undefined') return { ok: false, error: 'Ambiente inválido' }
-  const user = findDevUser(email)
-  if (!user || user.password !== password) {
-    return { ok: false, error: 'E-mail ou senha inválidos.' }
+  _email: string,
+  _password: string
+): { ok: false; error: string } {
+  return {
+    ok: false,
+    error: 'Login client-side desativado. Use /admin/login (API assinada).',
   }
-  if (user.status !== 'ativo') {
-    return { ok: false, error: 'Conta inativa.' }
-  }
-  if (!isAdminRole(user.role)) {
-    return {
-      ok: false,
-      error: 'Esta conta não possui permissão para acessar o ambiente administrativo.',
-    }
-  }
-  persistSession('admin', {
-    userId: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role,
-    realtorId: user.realtorId,
-    realm: 'admin',
-  })
-  return { ok: true, user }
 }
 
-/** Login do ambiente corretor/usuário (/login) */
+/** @deprecated Use POST /api/auth/login */
 export function loginApp(
-  email: string,
-  password: string
-): { ok: true; user: AuthUser; redirectTo: string } | { ok: false; error: string; hintAdmin?: boolean } {
-  if (typeof window === 'undefined') return { ok: false, error: 'Ambiente inválido' }
-  const user = findDevUser(email)
-  if (!user || user.password !== password) {
-    return { ok: false, error: 'E-mail ou senha inválidos.' }
+  _email: string,
+  _password: string
+): { ok: false; error: string; hintAdmin?: boolean } {
+  return {
+    ok: false,
+    error: 'Login client-side desativado. Use /login (API assinada).',
   }
-  if (user.status !== 'ativo') {
-    return { ok: false, error: 'Conta inativa.' }
-  }
-  if (isAdminRole(user.role)) {
-    return {
-      ok: false,
-      error: 'Esta conta é administrativa. Use o acesso em /admin/login.',
-      hintAdmin: true,
-    }
-  }
-  if (user.role === 'cliente') {
-    persistSession('app', {
-      userId: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      realtorId: user.realtorId,
-      realm: 'app',
-    })
-    return { ok: true, user, redirectTo: '/cliente/corretor-demonstracao/login' }
-  }
-  persistSession('app', {
-    userId: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role,
-    realtorId: user.realtorId,
-    realm: 'app',
-  })
-  // Compatibilidade com código legado
-  localStorage.setItem('isAuthenticated', 'true')
-  localStorage.setItem('userEmail', user.email)
-  localStorage.setItem('userName', user.name)
-  localStorage.setItem('userRole', user.role)
-  localStorage.setItem('onboardingComplete', 'true')
-  return { ok: true, user, redirectTo: '/dashboard' }
 }
 
-export function logoutAdmin(): void {
+export async function logoutAdmin(): Promise<void> {
   if (typeof window === 'undefined') return
-  clearSession('admin')
+  await serverLogout()
+  clearProfile('admin')
+  scrubLegacyAuthArtifacts()
 }
 
-export function logoutApp(): void {
+export async function logoutApp(): Promise<void> {
   if (typeof window === 'undefined') return
-  clearSession('app')
-  localStorage.removeItem('isAuthenticated')
+  await serverLogout()
+  clearProfile('app')
+  scrubLegacyAuthArtifacts()
   localStorage.removeItem('userEmail')
   localStorage.removeItem('userName')
   localStorage.removeItem('userRole')
-  localStorage.removeItem('pendingSignup')
   localStorage.removeItem('onboardingComplete')
 }
 
-export function logout(): void {
-  logoutApp()
-  logoutAdmin()
+export async function logout(): Promise<void> {
+  await logoutApp()
+  await logoutAdmin()
   if (typeof window === 'undefined') return
   ;[
     'clientAuthenticated',
@@ -246,12 +220,12 @@ export function logout(): void {
 }
 
 export function getAdminSession(): SessionPayload | null {
-  const s = readSession('admin')
+  const s = readProfile('admin')
   return s?.realm === 'admin' ? s : null
 }
 
 export function getAppSession(): SessionPayload | null {
-  const s = readSession('app')
+  const s = readProfile('app')
   return s?.realm === 'app' ? s : null
 }
 
@@ -265,19 +239,29 @@ export function isAppAuthenticated(): boolean {
   return !!s && (isRealtorAppRole(s.role) || s.role === 'cliente')
 }
 
-/** Compat: sessão do app (corretor) ou legado */
+/**
+ * @deprecated NÃO usar como fonte de verdade de auth.
+ * Middleware + /api/auth/me são autoritativos. Mantido só para UI legada.
+ */
 export function isAuthenticated(): boolean {
   if (typeof window === 'undefined') return false
-  if (isAppAuthenticated()) return true
-  return localStorage.getItem('isAuthenticated') === 'true' && !isAdminRole(getUserRole() as UserRole)
+  return isAppAuthenticated()
 }
 
 export function getUserEmail(): string {
-  return getAppSession()?.email || getAdminSession()?.email || (typeof window !== 'undefined' ? localStorage.getItem('userEmail') || '' : '')
+  return (
+    getAppSession()?.email ||
+    getAdminSession()?.email ||
+    (typeof window !== 'undefined' ? localStorage.getItem('userEmail') || '' : '')
+  )
 }
 
 export function getUserName(): string {
-  return getAppSession()?.name || getAdminSession()?.name || (typeof window !== 'undefined' ? localStorage.getItem('userName') || '' : '')
+  return (
+    getAppSession()?.name ||
+    getAdminSession()?.name ||
+    (typeof window !== 'undefined' ? localStorage.getItem('userName') || '' : '')
+  )
 }
 
 export function getUserRole(): UserRole {
@@ -285,8 +269,7 @@ export function getUserRole(): UserRole {
   if (app) return app.role
   const admin = getAdminSession()
   if (admin) return admin.role
-  if (typeof window === 'undefined') return 'corretor'
-  return (localStorage.getItem('userRole') as UserRole) || 'corretor'
+  return 'corretor'
 }
 
 export function getSessionRealtorId(): number | null {
@@ -298,7 +281,6 @@ export function getSessionRealtorId(): number | null {
 export function isSuperAdmin(): boolean {
   const admin = getAdminSession()
   if (admin) return admin.role === 'super_admin' || admin.role === 'admin'
-  // Não considerar sessão do app como admin
   return false
 }
 
@@ -316,11 +298,8 @@ export function canAccessRealtorRealm(): boolean {
   return !!s && isRealtorAppRole(s.role)
 }
 
-/** @deprecated Use loginApp — mantido para páginas antigas */
-export function login(email: string, password: string): boolean {
-  const result = loginApp(email, password)
-  if (result.ok) return true
-  // Tentativa admin neste login antigo não deve autenticar no app
+/** @deprecated */
+export function login(_email: string, _password: string): boolean {
   return false
 }
 
@@ -330,34 +309,80 @@ export function resetDevLocalData(): void {
   const keys = [
     ADMIN_LS,
     APP_LS,
+    'ih_admin_auth',
+    'ih_app_auth',
     'isAuthenticated',
     'userEmail',
     'userName',
     'userRole',
     'pendingSignup',
     'onboardingComplete',
+    'ih_registered_users',
     'phase12ProfessionalRequests',
     'phase13AiIntegrations',
     'imovelhub_support_tickets',
     'imovelhub_service_requests',
     'imovelhub_notifications',
+    'phase14Plans_v2',
+    'phase14Subscriptions_v2',
+    'phase14Invoices_v2',
+    'phase14Coupons_v2',
     'phase14_subscriptions',
     'phase14_invoices',
     'phase14_coupons',
     'phase14_plans',
+    'imovelhub_meu_site_settings',
+    'imovelhub_site_publish',
+    'imovelhub_site_analytics',
+    'imovelhub_site_leads',
+    'imovelhub_access_logs_v1',
+    'imovelhub_crm_leads',
+    'imovelhub_site_extra_properties',
+    'imovelhub_site_archived_ids',
+    'imovelhub_page_templates_v1',
+    'imovelhub_template_categories_v1',
+    'imovelhub_broker_template_subs_v1',
+    'imovelhub_broker_template_custom_v1',
+    'imovelhub_broker_domains_v1',
+    'imovelhub_domain_orders_v1',
+    'imovelhub_domain_searches_v1',
+    'imovelhub_template_metrics_v1',
+    'imovelhub_template_marketplace_config_v1',
+    'imovelhub_template_history_v1',
+    'imovelhub_domain_search_rate_v1',
+    'imovelhub_pwa_prefs',
+    'imovelhub_pwa_events',
+    'clientAuthenticated',
+    'clientEmail',
+    'clientName',
+    'clientPhone',
+    'clientRealtorSlug',
+    'clientRealtorId',
+    'clientTermsAccepted',
+    'clientOnboardingComplete',
+    'clientFinancialConsent',
+    'clientQualification',
+    'clientFavorites',
+    'clientCompare',
+    'clientDiscarded',
+    'clientViewed',
+    'clientProfile',
+    'clientFinancial',
   ]
   keys.forEach((k) => localStorage.removeItem(k))
-  clearCookie(ADMIN_COOKIE)
-  clearCookie(APP_COOKIE)
-  // Marca seed limpa
-  localStorage.setItem('ih_dev_seed_version', '2026-07-28-v1')
+  clearCookie(LEGACY_ADMIN_COOKIE)
+  clearCookie(LEGACY_APP_COOKIE)
+  localStorage.setItem('ih_dev_seed_version', '2026-08-20-v3-secure')
 }
 
 export function ensureCleanDevSeed(): void {
   if (typeof window === 'undefined') return
-  if (localStorage.getItem('ih_dev_seed_version') !== '2026-07-28-v1') {
+  if (localStorage.getItem('ih_dev_seed_version') !== '2026-08-20-v3-secure') {
     resetDevLocalData()
   }
 }
 
-export const AUTH_COOKIES = { ADMIN_COOKIE, APP_COOKIE }
+export const AUTH_COOKIES = {
+  ADMIN_COOKIE: LEGACY_ADMIN_COOKIE,
+  APP_COOKIE: LEGACY_APP_COOKIE,
+}

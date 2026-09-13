@@ -166,8 +166,8 @@ export function Header() {
                   <button
                     type="button"
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-destructive hover:bg-muted"
-                    onClick={() => {
-                      logoutApp()
+                    onClick={async () => {
+                      await logoutApp()
                       window.location.href = '/login'
                     }}
                   >

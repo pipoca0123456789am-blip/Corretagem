@@ -19,14 +19,7 @@ type DocRow = {
   updatedAt: string
 }
 
-const seedDocs: DocRow[] = [
-  { id: 'd1', realtorId: 1, title: 'Contrato de compra — Cobertura Moema', category: 'Contrato', status: 'Assinado', updatedAt: '20/07/2026' },
-  { id: 'd2', realtorId: 1, title: 'RG/CPF — Ana Souza', category: 'Cliente', status: 'Aprovado', updatedAt: '22/07/2026' },
-  { id: 'd3', realtorId: 1, title: 'Matrícula — Casa Alphaville', category: 'Imóvel', status: 'Pendente', updatedAt: '25/07/2026' },
-  { id: 'd4', realtorId: 2, title: 'Proposta — Apto Tamboré', category: 'Proposta', status: 'Enviado', updatedAt: '18/07/2026' },
-  { id: 'd5', realtorId: 2, title: 'Comprovante — página profissional', category: 'Pagamento', status: 'Aprovado', updatedAt: '12/07/2026' },
-  { id: 'd6', realtorId: 3, title: 'Ficha cadastral — Paulo Nogueira', category: 'Cliente', status: 'Rascunho', updatedAt: '27/07/2026' },
-]
+const seedDocs: DocRow[] = []
 
 export default function DocumentsPage() {
   const [q, setQ] = useState('')

@@ -59,7 +59,7 @@ export default function AdminAiPage() {
 
   return (
     <div>
-      <Breadcrumbs items={[{ label: 'Admin', href: '/admin/dashboard' }, { label: 'Agentes de IA' }]} />
+      <Breadcrumbs items={[{ label: 'Admin', href: '/paineladmin' }, { label: 'Agentes de IA' }]} />
       <div className="space-y-6 p-4 md:p-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground md:text-3xl">Agentes de IA — visão global</h1>

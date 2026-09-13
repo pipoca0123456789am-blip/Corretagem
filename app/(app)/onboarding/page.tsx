@@ -65,7 +65,6 @@ export default function OnboardingPage() {
   const handleComplete = async () => {
     setLoading(true)
     setTimeout(() => {
-      localStorage.setItem('onboardingComplete', 'true')
       router.push('/dashboard')
       setLoading(false)
     }, 1000)

@@ -394,29 +394,7 @@ export const addOnProducts: AddOnProduct[] = [
   },
 ]
 
-export const coupons: Coupon[] = [
-  {
-    id: 'c1',
-    code: 'BEMVINDO20',
-    discountPercent: 20,
-    active: true,
-    description: '20% no primeiro mês (provisório)',
-  },
-  {
-    id: 'c2',
-    code: 'EQUIPE10',
-    discountPercent: 10,
-    active: true,
-    description: '10% para equipes',
-  },
-  {
-    id: 'c3',
-    code: 'INATIVO',
-    discountPercent: 50,
-    active: false,
-    description: 'Cupom desativado',
-  },
-]
+export const coupons: Coupon[] = []
 
 export const paymentStatusLabels: Record<PaymentStatus, string> = {
   aprovado: 'Aprovado',
@@ -454,139 +432,9 @@ function daysFromToday(days: number): string {
   return d.toISOString().slice(0, 10)
 }
 
-export let subscriptions: Subscription[] = [
-  {
-    id: 'sub-1',
-    realtorId: 1,
-    realtorName: 'Corretor Demonstração',
-    planId: 'essencial',
-    status: 'ativa',
-    paymentStatus: 'aprovado',
-    billingCycle: 'mensal',
-    startedAt: '2026-05-01',
-    renewsAt: '2026-09-01',
-    propertiesUsed: 27,
-    usersUsed: 1,
-    campaignsUsed: 1,
-    addons: [],
-    history: [
-      { id: 'h1', label: 'Assinatura ativada — Plano Essencial (demo de limites)', at: '2026-05-01' },
-      { id: 'h2', label: 'Preços provisórios atualizados', at: '2026-08-05' },
-    ],
-  },
-  {
-    id: 'sub-2',
-    realtorId: 2,
-    realtorName: 'Marina Costa Santos',
-    planId: 'premium',
-    status: 'ativa',
-    paymentStatus: 'aprovado',
-    billingCycle: 'anual',
-    startedAt: '2026-03-10',
-    renewsAt: '2027-03-10',
-    propertiesUsed: 28,
-    usersUsed: 4,
-    campaignsUsed: 8,
-    couponCode: 'EQUIPE10',
-    addons: [],
-    history: [
-      { id: 'h1', label: 'Upgrade para Premium', at: '2026-04-12' },
-      { id: 'h2', label: 'Cupom EQUIPE10 aplicado', at: '2026-04-12' },
-    ],
-  },
-  {
-    id: 'sub-3',
-    realtorId: 4,
-    realtorName: 'Juliana Lima Oliveira',
-    planId: 'essencial',
-    status: 'inadimplente',
-    paymentStatus: 'vencido',
-    billingCycle: 'mensal',
-    startedAt: '2026-06-01',
-    renewsAt: '2026-07-01',
-    propertiesUsed: 11,
-    usersUsed: 1,
-    campaignsUsed: 1,
-    addons: [],
-    history: [
-      { id: 'h1', label: 'Fatura vencida', at: '2026-07-05' },
-      { id: 'h2', label: 'Lembrete de inadimplência', at: '2026-07-12' },
-    ],
-  },
-  {
-    id: 'sub-4',
-    realtorId: 5,
-    realtorName: 'Diego Alves Pereira',
-    planId: 'profissional',
-    status: 'trial',
-    paymentStatus: 'pendente',
-    billingCycle: 'mensal',
-    startedAt: '2026-07-28',
-    renewsAt: daysFromToday(TRIAL_DAYS),
-    trialEndsAt: daysFromToday(TRIAL_DAYS),
-    propertiesUsed: 3,
-    usersUsed: 1,
-    campaignsUsed: 0,
-    addons: [],
-    history: [
-      {
-        id: 'h1',
-        label: `Teste gratuito iniciado (${TRIAL_DAYS} dias) — Profissional`,
-        at: '2026-07-28',
-      },
-    ],
-  },
-]
+export let subscriptions: Subscription[] = []
 
-export let invoices: Invoice[] = [
-  {
-    id: 'inv-1001',
-    realtorId: 1,
-    subscriptionId: 'sub-1',
-    description: 'Plano Essencial — julho/2026',
-    amount: 69.9,
-    status: 'aprovado',
-    dueDate: '2026-07-01',
-    paidAt: '2026-07-01',
-  },
-  {
-    id: 'inv-1002',
-    realtorId: 1,
-    subscriptionId: 'sub-1',
-    description: 'Plano Essencial — agosto/2026',
-    amount: 69.9,
-    status: 'pendente',
-    dueDate: '2026-08-01',
-  },
-  {
-    id: 'inv-2001',
-    realtorId: 2,
-    subscriptionId: 'sub-2',
-    description: 'Plano Premium anual — 2026',
-    amount: 2699.1,
-    status: 'aprovado',
-    dueDate: '2026-03-10',
-    paidAt: '2026-03-09',
-  },
-  {
-    id: 'inv-4001',
-    realtorId: 4,
-    subscriptionId: 'sub-3',
-    description: 'Plano Essencial — julho/2026',
-    amount: 69.9,
-    status: 'vencido',
-    dueDate: '2026-07-01',
-  },
-  {
-    id: 'inv-4002',
-    realtorId: 4,
-    subscriptionId: 'sub-3',
-    description: 'Tentativa de cobrança',
-    amount: 69.9,
-    status: 'falhou',
-    dueDate: '2026-07-08',
-  },
-]
+export let invoices: Invoice[] = []
 
 const STORAGE_PLANS = 'phase14Plans_v2'
 const STORAGE_SUBS = 'phase14Subscriptions_v2'

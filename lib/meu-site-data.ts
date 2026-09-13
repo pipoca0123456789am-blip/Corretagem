@@ -11,6 +11,7 @@ import {
   slugifyTitle,
 } from '@/lib/phase9-data'
 import { propertiesList } from '@/lib/mock-data'
+import { recordAccessLog } from '@/lib/access-logs'
 
 const SETTINGS_KEY = 'imovelhub_meu_site_settings'
 const PUBLISH_KEY = 'imovelhub_site_publish'
@@ -262,17 +263,12 @@ export function getSiteAnalytics(realtorId?: number | null): SiteAnalytics {
   const id = realtorId ?? getCurrentRealtorId() ?? 1
   const map = loadMap<SiteAnalytics>(ANALYTICS_KEY)
   if (map[String(id)]) return map[String(id)]
-  const props = propertiesList.filter((p) => p.realtor.id === id)
   return {
     realtorId: id,
-    views: 1280,
-    leads: 24,
-    signups: 9,
-    propertyViews: props.slice(0, 5).map((p, i) => ({
-      id: String(p.id),
-      title: p.title,
-      views: 420 - i * 70,
-    })),
+    views: 0,
+    leads: 0,
+    signups: 0,
+    propertyViews: [],
   }
 }
 
@@ -282,6 +278,11 @@ export function bumpSiteView(realtorId: number) {
   current.views += 1
   map[String(realtorId)] = current
   saveMap(ANALYTICS_KEY, map)
+  recordAccessLog({
+    action: 'site_view',
+    realtorId,
+    source: 'vitrine-publica',
+  })
 }
 
 export function addSiteLead(lead: Omit<SiteLead, 'id' | 'createdAt'>) {
@@ -305,6 +306,17 @@ export function addSiteLead(lead: Omit<SiteLead, 'id' | 'createdAt'>) {
   analytics[key] = a
   saveMap(ANALYTICS_KEY, analytics)
 
+  recordAccessLog({
+    action: 'lead_submit',
+    realtorId: lead.realtorId,
+    leadId: entry.id,
+    leadName: lead.name,
+    leadEmail: lead.email,
+    leadPhone: lead.phone,
+    source: lead.source,
+    detail: lead.preferences ? JSON.stringify(lead.preferences).slice(0, 280) : undefined,
+  })
+
   // Espelha no CRM local do corretor (clientes)
   try {
     const crmKey = 'imovelhub_crm_leads'
@@ -324,6 +336,14 @@ export function addSiteLead(lead: Omit<SiteLead, 'id' | 'createdAt'>) {
   } catch {
     /* ignore */
   }
+}
+
+/** Todos os leads de todas as carteiras (visão Super Admin) */
+export function getAllSiteLeads(): SiteLead[] {
+  const list = loadMap<SiteLead[]>(LEADS_KEY)
+  return Object.values(list)
+    .flat()
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }
 
 export function getSiteLeads(realtorId?: number | null): SiteLead[] {

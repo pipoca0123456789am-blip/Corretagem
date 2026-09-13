@@ -71,7 +71,7 @@ export default function AdminSubscriptionDetailPage() {
     <div>
       <Breadcrumbs
         items={[
-          { label: 'Admin', href: '/admin/dashboard' },
+          { label: 'Admin', href: '/paineladmin' },
           { label: 'Assinaturas', href: '/admin/subscriptions' },
           { label: id },
         ]}

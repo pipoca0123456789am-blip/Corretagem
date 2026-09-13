@@ -13,7 +13,7 @@ export default function AdminSettingsPage() {
 
   return (
     <div>
-      <Breadcrumbs items={[{ label: 'Admin', href: '/admin/dashboard' }, { label: 'Configurações' }]} />
+      <Breadcrumbs items={[{ label: 'Admin', href: '/paineladmin' }, { label: 'Configurações' }]} />
       <div className="mx-auto max-w-2xl space-y-6 p-4 md:p-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground md:text-3xl">Configurações da plataforma</h1>
@@ -25,6 +25,15 @@ export default function AdminSettingsPage() {
             <Badge variant="info">Preços de planos provisórios</Badge>
             <Badge variant="warning">Página profissional R$ 497</Badge>
             <Badge variant="secondary">IA R$ 97 sugerido</Badge>
+          </div>
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+            <p className="text-sm font-medium text-foreground">Segurança — 2FA TOTP</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Configure autenticador para Super Admin antes de produção.
+            </p>
+            <Button className="mt-3" variant="outline" onClick={() => (window.location.href = '/admin/security/2fa')}>
+              Abrir configuração 2FA
+            </Button>
           </div>
           <Input label="Nome da plataforma" defaultValue="ImóvelHub" />
           <Input label="E-mail de suporte" defaultValue="suporte@imovel.hub" />

@@ -23,31 +23,29 @@ export default function ClientLoginPage() {
   if (!profile) return null
   const base = `/cliente/${slug}`
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
-    setTimeout(() => {
-      const ok = loginClient({
-        email,
-        password,
-        realtorSlug: profile.slug,
-        realtorId: profile.id,
-        name: email === demoClient.email ? demoClient.name : undefined,
-        phone: email === demoClient.email ? demoClient.phone : undefined,
-      })
-      if (!ok) {
-        setError('Informe e-mail e senha para entrar.')
-        setLoading(false)
-        return
-      }
-      if (remember) localStorage.setItem('clientRemember', 'true')
-      const session = getClientSession()
-      if (!session?.termsAccepted) router.push(`${base}/termos`)
-      else if (!session?.onboardingComplete) router.push(`${base}/onboarding`)
-      else router.push(base)
+    const result = await loginClient({
+      email,
+      password,
+      realtorSlug: profile.slug,
+      realtorId: profile.id,
+      name: email === demoClient.email ? demoClient.name : undefined,
+      phone: email === demoClient.email ? demoClient.phone : undefined,
+    })
+    if (!result.ok) {
+      setError(result.error)
       setLoading(false)
-    }, 700)
+      return
+    }
+    if (remember) localStorage.setItem('clientRemember', 'true')
+    const session = getClientSession()
+    if (!session?.termsAccepted) router.push(`${base}/termos`)
+    else if (!session?.onboardingComplete) router.push(`${base}/onboarding`)
+    else router.push(base)
+    setLoading(false)
   }
 
   return (

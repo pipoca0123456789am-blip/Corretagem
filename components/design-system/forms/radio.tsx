@@ -91,5 +91,3 @@ export const RadioGroup = React.forwardRef<HTMLFieldSetElement, RadioGroupProps>
 )
 
 RadioGroup.displayName = 'RadioGroup'
-
-export { RadioGroup }

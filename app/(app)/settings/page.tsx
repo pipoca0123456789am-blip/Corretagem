@@ -27,8 +27,8 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 3000)
   }
 
-  const handleLogout = () => {
-    logoutApp()
+  const handleLogout = async () => {
+    await logoutApp()
     router.push('/login')
   }
 

@@ -42,7 +42,7 @@ export default function AdminUsersPage() {
 
   return (
     <div>
-      <Breadcrumbs items={[{ label: 'Admin', href: '/admin/dashboard' }, { label: 'Usuários' }]} />
+      <Breadcrumbs items={[{ label: 'Admin', href: '/paineladmin' }, { label: 'Usuários' }]} />
       <div className="space-y-6 p-4 md:p-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground md:text-3xl">Usuários da plataforma</h1>

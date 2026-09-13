@@ -7,9 +7,15 @@ __v0_jsx-dev-runtime.ts
 .vercel/
 
 # Environment variables
+.env
 .env*.local
+
+# Auth / user data (server-side)
+data/users.json
+data/security-events.jsonl
 
 # Common ignores
 node_modules
 .next/
 .DS_Store
+.vercel

@@ -33,6 +33,7 @@ import {
   getClientSession,
   isAdminViewingClient,
   logoutClient,
+  syncClientSessionFromServer,
 } from '@/lib/client-auth'
 import { resolveClientRealtor } from '@/lib/phase11-data'
 import { PublicRealtorProfile } from '@/lib/phase9-data'
@@ -118,29 +119,55 @@ export function ClientPortalLayout({ children }: { children: React.ReactNode }) 
   const base = `/cliente/${slug}`
 
   useEffect(() => {
-    if (!profile) {
-      setDenied(true)
+    let cancelled = false
+    async function gate() {
+      if (!profile) {
+        if (!cancelled) {
+          setDenied(true)
+          setReady(true)
+        }
+        return
+      }
+      let adminFromServer = false
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'same-origin' })
+        if (res.ok) {
+          const data = (await res.json()) as { ok?: boolean; realm?: string }
+          if (data.ok && data.realm === 'admin') adminFromServer = true
+          if (data.ok && data.realm === 'client') {
+            await syncClientSessionFromServer(slug)
+          }
+        } else {
+          await syncClientSessionFromServer(slug)
+        }
+      } catch {
+        await syncClientSessionFromServer(slug)
+      }
+      if (cancelled) return
+      if (!canAccessClientPortal(slug) && !isAdminViewingClient() && !adminFromServer) {
+        router.replace(`${base}/login`)
+        return
+      }
+      const session = getClientSession()
+      const adminViewing = isAdminViewingClient() || adminFromServer
+      if (!adminViewing) {
+        if (session && !session.termsAccepted) {
+          router.replace(`${base}/termos`)
+          return
+        }
+        if (session && !session.onboardingComplete) {
+          router.replace(`${base}/onboarding`)
+          return
+        }
+      }
+      setAdminView(adminViewing)
+      setSessionName(session?.name || (adminViewing ? 'Super Admin' : 'Cliente'))
       setReady(true)
-      return
     }
-    if (!canAccessClientPortal(slug)) {
-      router.replace(`${base}/login`)
-      return
+    void gate()
+    return () => {
+      cancelled = true
     }
-    const session = getClientSession()
-    if (!isAdminViewingClient()) {
-      if (session && !session.termsAccepted) {
-        router.replace(`${base}/termos`)
-        return
-      }
-      if (session && !session.onboardingComplete) {
-        router.replace(`${base}/onboarding`)
-        return
-      }
-    }
-    setAdminView(isAdminViewingClient())
-    setSessionName(session?.name || (isAdminViewingClient() ? 'Super Admin' : 'Cliente'))
-    setReady(true)
   }, [profile, slug, base, router])
 
   if (!ready) {
@@ -215,12 +242,12 @@ export function ClientPortalLayout({ children }: { children: React.ReactNode }) 
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => {
+            onClick={async () => {
               if (adminView) {
                 router.push('/admin/client-portal')
                 return
               }
-              logoutClient()
+              await logoutClient()
               router.push(`${base}/login`)
             }}
           >

@@ -4,12 +4,11 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X, Shield } from 'lucide-react'
-import { logoutAdmin } from '@/lib/auth'
 
 const sections: { title: string; items: { label: string; href: string }[] }[] = [
   {
     title: 'Centro de controle',
-    items: [{ label: 'Dashboard', href: '/admin/dashboard' }],
+    items: [{ label: 'Dashboard', href: '/paineladmin' }],
   },
   {
     title: 'Corretores e contas',
@@ -35,6 +34,7 @@ const sections: { title: string; items: { label: string; href: string }[] }[] = 
     title: 'Operação',
     items: [
       { label: 'Suporte', href: '/admin/suporte' },
+      { label: 'Leads e acessos', href: '/admin/leads' },
       { label: 'Comunicação', href: '/admin/comunicacao' },
       { label: 'Financeiro', href: '/admin/financeiro' },
       { label: 'Relatórios', href: '/admin/relatorios' },
@@ -67,7 +67,7 @@ export function AdminSidebar() {
         }`}
       >
         <div className="border-b border-slate-800 p-5">
-          <Link href="/admin/dashboard" className="flex items-center gap-3" onClick={() => setIsOpen(false)}>
+          <Link href="/paineladmin" className="flex items-center gap-3" onClick={() => setIsOpen(false)}>
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/20 text-amber-400">
               <Shield className="h-5 w-5" />
             </div>
@@ -115,8 +115,8 @@ export function AdminSidebar() {
           <button
             type="button"
             className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-400 hover:bg-slate-900 hover:text-white"
-            onClick={() => {
-              logoutAdmin()
+            onClick={async () => {
+              await fetch('/api/auth/logout', { method: 'POST' })
               window.location.href = '/admin/login'
             }}
           >

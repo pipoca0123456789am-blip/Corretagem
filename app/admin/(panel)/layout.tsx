@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { canAccessAdminRealm, ensureCleanDevSeed } from '@/lib/auth'
 import { AdminSidebar } from '@/components/layout/admin-sidebar'
 import { AdminHeader } from '@/components/layout/admin-header'
+import { cachePublicSession } from '@/lib/auth'
 
 export default function AdminPanelLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -12,18 +12,50 @@ export default function AdminPanelLayout({ children }: { children: React.ReactNo
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    ensureCleanDevSeed()
-    if (!canAccessAdminRealm()) {
-      router.replace(`/admin/login?next=${encodeURIComponent(pathname || '/admin/dashboard')}`)
-      return
+    let cancelled = false
+    ;(async () => {
+      try {
+        // Enrollment 2FA sem sessão completa (challengeId)
+        if (pathname?.startsWith('/admin/security/2fa')) {
+          const hasChallenge =
+            typeof window !== 'undefined' &&
+            (sessionStorage.getItem('ih_admin_2fa_challenge') ||
+              new URLSearchParams(window.location.search).get('setup') === '1')
+          if (hasChallenge) {
+            setReady(true)
+            return
+          }
+        }
+        const res = await fetch('/api/auth/me', { credentials: 'same-origin' })
+        const data = await res.json()
+        if (cancelled) return
+        const adminRoles = ['super_admin', 'admin', 'suporte', 'financeiro']
+        if (!res.ok || !data?.ok || data.realm !== 'admin' || !adminRoles.includes(data.session?.role)) {
+          router.replace(`/admin/login?next=${encodeURIComponent(pathname || '/paineladmin')}`)
+          return
+        }
+        cachePublicSession({
+          userId: data.session.userId,
+          email: data.session.email,
+          name: data.session.name,
+          role: data.session.role,
+          realtorId: data.session.realtorId ?? null,
+          realm: 'admin',
+        })
+        setReady(true)
+      } catch {
+        if (!cancelled) router.replace('/admin/login')
+      }
+    })()
+    return () => {
+      cancelled = true
     }
-    setReady(true)
   }, [router, pathname])
 
   if (!ready) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-300">
-        <p className="text-sm">Validando acesso administrativo…</p>
+        <p className="text-sm">Validando sessão administrativa…</p>
       </div>
     )
   }

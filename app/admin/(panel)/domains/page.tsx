@@ -49,7 +49,7 @@ export default function AdminDomainsPage() {
     <div className="space-y-6 p-4 md:p-6">
       <Breadcrumbs
         items={[
-          { label: 'Admin', href: '/admin/dashboard' },
+          { label: 'Admin', href: '/paineladmin' },
           { label: 'Domínios' },
         ]}
       />

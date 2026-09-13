@@ -10,6 +10,7 @@ export default function AgentsPage() {
     {
       id: 1,
       name: 'João Silva',
+      title: 'Corretor',
       email: 'joao@imovel.hub',
       phone: '(11) 99999-1111',
       rating: 4.8,
@@ -19,6 +20,7 @@ export default function AgentsPage() {
     {
       id: 2,
       name: 'Maria Santos',
+      title: 'Corretora',
       email: 'maria@imovel.hub',
       phone: '(11) 99999-2222',
       rating: 4.9,
@@ -28,6 +30,7 @@ export default function AgentsPage() {
     {
       id: 3,
       name: 'Carlos Oliveira',
+      title: 'Corretor',
       email: 'carlos@imovel.hub',
       phone: '(11) 99999-3333',
       rating: 4.7,

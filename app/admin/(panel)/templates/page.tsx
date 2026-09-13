@@ -80,7 +80,7 @@ export default function AdminTemplatesPage() {
     <div className="p-4 md:p-6 space-y-6">
       <Breadcrumbs
         items={[
-          { label: 'Admin', href: '/admin/dashboard' },
+          { label: 'Admin', href: '/paineladmin' },
           { label: 'Marketplace de templates' },
         ]}
       />

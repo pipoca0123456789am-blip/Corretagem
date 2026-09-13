@@ -216,7 +216,6 @@ export default function PropertiesPage() {
               <div key={String(prop.id)} className="space-y-2">
                 <Link href={prop.fromSite ? '/meu-site' : `/properties/${prop.id}`}>
                   <PropertyCard
-                    id={prop.id}
                     image={
                       prop.image.startsWith('/')
                         ? 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop'
@@ -226,8 +225,8 @@ export default function PropertiesPage() {
                     location={prop.address}
                     price={prop.price}
                     area={prop.area}
-                    beds={prop.bedrooms}
-                    baths={prop.bathrooms}
+                    bedrooms={prop.bedrooms}
+                    bathrooms={prop.bathrooms}
                     status={mapStatus(prop.status)}
                   />
                 </Link>

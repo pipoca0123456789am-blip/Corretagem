@@ -59,7 +59,7 @@ export default function AdminRequestDetailPage() {
     <div>
       <Breadcrumbs
         items={[
-          { label: 'Admin', href: '/admin/dashboard' },
+          { label: 'Admin', href: '/paineladmin' },
           { label: 'Solicitações', href: '/admin/requests' },
           { label: id },
         ]}

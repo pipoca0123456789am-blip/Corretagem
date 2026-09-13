@@ -68,7 +68,7 @@ export default function AdminReportsPage() {
     <div>
       <Breadcrumbs
         items={[
-          { label: 'Admin', href: '/admin/dashboard' },
+          { label: 'Admin', href: '/paineladmin' },
           { label: 'Relatórios' },
         ]}
       />

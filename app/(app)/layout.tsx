@@ -6,8 +6,8 @@ import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 import { PlanRouteGuard } from '@/components/billing/plan-route-guard'
 import { RealtorPwaProvider } from '@/components/pwa/realtor-pwa-provider'
-import { canAccessRealtorRealm, ensureCleanDevSeed } from '@/lib/auth'
 import { detectDevice } from '@/lib/pwa'
+import { cachePublicSession } from '@/lib/auth'
 
 export default function RealtorAppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -16,21 +16,41 @@ export default function RealtorAppLayout({ children }: { children: React.ReactNo
   const [mobilePad, setMobilePad] = useState(false)
 
   useEffect(() => {
-    ensureCleanDevSeed()
-    if (!canAccessRealtorRealm()) {
-      router.replace(`/login?next=${encodeURIComponent(pathname || '/dashboard')}`)
-      return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'same-origin' })
+        const data = await res.json()
+        if (cancelled) return
+        if (!res.ok || !data?.ok || data.realm !== 'app' || !['corretor', 'assistente'].includes(data.session?.role)) {
+          router.replace(`/login?next=${encodeURIComponent(pathname || '/dashboard')}`)
+          return
+        }
+        cachePublicSession({
+          userId: data.session.userId,
+          email: data.session.email,
+          name: data.session.name,
+          role: data.session.role,
+          realtorId: data.session.realtorId ?? null,
+          realm: 'app',
+        })
+        setReady(true)
+        const d = detectDevice()
+        const narrow = window.matchMedia('(max-width: 767px)').matches
+        setMobilePad(d.isStandalone || narrow)
+      } catch {
+        if (!cancelled) router.replace('/login')
+      }
+    })()
+    return () => {
+      cancelled = true
     }
-    setReady(true)
-    const d = detectDevice()
-    const narrow = window.matchMedia('(max-width: 767px)').matches
-    setMobilePad(d.isStandalone || narrow)
   }, [router, pathname])
 
   if (!ready) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-sm text-muted-foreground">Validando acesso do corretor…</p>
+        <p className="text-sm text-muted-foreground">Validando sessão do corretor…</p>
       </div>
     )
   }

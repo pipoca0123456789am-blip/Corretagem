@@ -57,7 +57,7 @@ export default function AdminProfessionalRequestsPage() {
     <div>
       <Breadcrumbs
         items={[
-          { label: 'Admin', href: '/admin/dashboard' },
+          { label: 'Admin', href: '/paineladmin' },
           { label: 'Pág. Profissional' },
         ]}
       />

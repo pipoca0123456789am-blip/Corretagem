@@ -21,14 +21,7 @@ type ClientRow = {
   origin: string
 }
 
-const seedClients: ClientRow[] = [
-  { id: 'c1', realtorId: 1, name: 'Ana Souza', email: 'ana.cliente@email.com', phone: '(11) 98888-1001', stage: 'Quente', origin: 'Página pública' },
-  { id: 'c2', realtorId: 1, name: 'João Pedro Lima', email: 'joao.pedro@email.com', phone: '(11) 97777-2002', stage: 'Visita', origin: 'WhatsApp' },
-  { id: 'c3', realtorId: 1, name: 'Carla Mendes', email: 'carla.m@email.com', phone: '(11) 96666-3003', stage: 'Novo', origin: 'Campanha' },
-  { id: 'c4', realtorId: 2, name: 'Fernanda Dias', email: 'fernanda.d@email.com', phone: '(11) 95555-4004', stage: 'Proposta', origin: 'Página profissional' },
-  { id: 'c5', realtorId: 2, name: 'Lucas Prado', email: 'lucas.p@email.com', phone: '(11) 94444-5005', stage: 'Quente', origin: 'IA WhatsApp' },
-  { id: 'c6', realtorId: 3, name: 'Paulo Nogueira', email: 'paulo.n@email.com', phone: '(21) 93333-6006', stage: 'Novo', origin: 'Indicação' },
-]
+const seedClients: ClientRow[] = []
 
 export default function ClientsPage() {
   const [search, setSearch] = useState('')

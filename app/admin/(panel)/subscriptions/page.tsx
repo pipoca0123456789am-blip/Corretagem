@@ -86,7 +86,7 @@ export default function AdminSubscriptionsPage() {
 
   return (
     <div>
-      <Breadcrumbs items={[{ label: 'Admin', href: '/admin/dashboard' }, { label: 'Assinaturas' }]} />
+      <Breadcrumbs items={[{ label: 'Admin', href: '/paineladmin' }, { label: 'Assinaturas' }]} />
       <div className="space-y-6 p-4 md:p-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>

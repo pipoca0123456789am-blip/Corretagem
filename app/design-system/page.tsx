@@ -84,8 +84,8 @@ export default function DesignSystemPage() {
       title: 'Apartamento Moderno',
       location: 'Zona Sul, São Paulo',
       price: 850000,
-      beds: 3,
-      baths: 2,
+      bedrooms: 3,
+      bathrooms: 2,
       area: 120,
       status: 'available' as const,
     },
@@ -95,8 +95,8 @@ export default function DesignSystemPage() {
       title: 'Casa de Luxo',
       location: 'Bairro Alto, Rio de Janeiro',
       price: 2500000,
-      beds: 4,
-      baths: 3,
+      bedrooms: 4,
+      bathrooms: 3,
       area: 280,
       status: 'sold' as const,
     },
@@ -106,8 +106,8 @@ export default function DesignSystemPage() {
       title: 'Cobertura Premium',
       location: 'Centro, Brasília',
       price: 1800000,
-      beds: 3,
-      baths: 3,
+      bedrooms: 3,
+      bathrooms: 3,
       area: 200,
       status: 'rented' as const,
     },
@@ -117,17 +117,19 @@ export default function DesignSystemPage() {
     {
       id: '1',
       name: 'Carla Silva',
+      title: 'Corretora sênior',
       email: 'carla.silva@imobiliario.com',
       phone: '(11) 99999-1234',
-      sales: 45,
+      salesCount: 45,
       rating: 4.9,
     },
     {
       id: '2',
       name: 'Roberto Santos',
+      title: 'Corretor',
       email: 'roberto.santos@imobiliario.com',
       phone: '(11) 98888-5678',
-      sales: 38,
+      salesCount: 38,
       rating: 4.8,
     },
   ]
@@ -311,19 +313,19 @@ export default function DesignSystemPage() {
           <div className="space-y-8">
             {activeTab === 'overview' && (
               <div className="grid gap-6">
-                <Alert type="info" title="Bem-vindo ao Design System" description="Este é um sistema de design premium para a plataforma de imóveis SaaS." />
+                <Alert variant="info" title="Bem-vindo ao Design System" description="Este é um sistema de design premium para a plataforma de imóveis SaaS." />
                 <div className="grid sm:grid-cols-3 gap-4">
-                  <MetricCard label="Total de Imóveis" value="1.234" change={12} />
-                  <MetricCard label="Vendas Mês" value="R$ 2.5M" change={8} />
-                  <MetricCard label="Agentes Ativos" value="42" change={-3} />
+                  <MetricCard title="Total de Imóveis" value="1.234" trend={{ value: 12, isPositive: true }} />
+                  <MetricCard title="Vendas Mês" value="R$ 2.5M" trend={{ value: 8, isPositive: true }} />
+                  <MetricCard title="Agentes Ativos" value="42" trend={{ value: 3, isPositive: false }} />
                 </div>
               </div>
             )}
 
             {activeTab === 'cards' && (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockProperties.map((prop) => (
-                  <PropertyCard key={prop.id} {...prop} />
+                {mockProperties.map(({ id, ...prop }) => (
+                  <PropertyCard key={id} {...prop} />
                 ))}
               </div>
             )}
@@ -332,8 +334,8 @@ export default function DesignSystemPage() {
               <div className="mt-8 grid gap-4">
                 <h3 className="font-semibold text-lg">Agentes Imobiliários</h3>
                 <div className="grid sm:grid-cols-2 gap-4">
-                  {agents.map((agent) => (
-                    <AgentCard key={agent.id} {...agent} />
+                  {agents.map(({ id, ...agent }) => (
+                    <AgentCard key={id} {...agent} />
                   ))}
                 </div>
               </div>

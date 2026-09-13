@@ -12,7 +12,7 @@ export default function AdminFinancialPage() {
     <div>
       <Breadcrumbs
         items={[
-          { label: 'Admin', href: '/admin/dashboard' },
+          { label: 'Admin', href: '/paineladmin' },
           { label: 'Financeiro da plataforma' },
         ]}
       />

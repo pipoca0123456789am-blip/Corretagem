@@ -73,7 +73,7 @@ export default function AdminAiDetailPage() {
     <div>
       <Breadcrumbs
         items={[
-          { label: 'Admin', href: '/admin/dashboard' },
+          { label: 'Admin', href: '/paineladmin' },
           { label: 'Agentes de IA', href: '/admin/ai' },
           { label: id },
         ]}
