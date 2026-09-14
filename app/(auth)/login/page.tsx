@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense, useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/design-system/buttons/button'
 import { Input } from '@/components/design-system/forms/input'
@@ -11,7 +11,6 @@ import { Eye, EyeOff } from 'lucide-react'
 import { isDevSeedUiEnabled } from '@/lib/auth-public'
 
 function LoginForm() {
-  const router = useRouter()
   const params = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -35,6 +34,7 @@ function LoginForm() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify({
           email,
           password,
@@ -53,8 +53,8 @@ function LoginForm() {
         return
       }
       void rememberMe
-      router.push(data.redirectTo || '/dashboard')
-      router.refresh()
+      // Hard navigation garante cookie aplicado antes do layout validar /api/auth/me
+      window.location.assign(data.redirectTo || '/dashboard')
     } catch {
       setError('Falha de rede. Tente novamente.')
     } finally {

@@ -59,22 +59,14 @@ function PlansPageInner() {
   const comparisonRows = useMemo(
     () => [
       { label: 'Imóveis ativos', render: (p: SaaSPlan) => limitLabel(p.propertyLimit) },
-      { label: 'Usuários', render: (p: SaaSPlan) => limitLabel(p.userLimit) },
-      { label: 'Campanhas', render: (p: SaaSPlan) => limitLabel(p.campaignLimit) },
-      { label: 'Arquivamento de imóveis', render: (p: SaaSPlan) => (p.archivedProperties ? 'Sim' : 'Não') },
-      { label: 'CRM', render: (p: SaaSPlan) => featureLabel('crm', p.features.crm) },
+      { label: 'Usuários da equipe', render: (p: SaaSPlan) => limitLabel(p.userLimit) },
+      { label: 'CRM e clientes', render: (p: SaaSPlan) => featureLabel('crm', p.features.crm) },
       { label: 'Área do cliente', render: (p: SaaSPlan) => featureLabel('clientArea', p.features.clientArea) },
-      { label: 'Meu Site', render: (p: SaaSPlan) => (p.features.brokerSite ? 'Incluído' : 'Não') },
-      { label: 'Financeiro', render: (p: SaaSPlan) => (p.features.finance ? 'Incluído' : 'Não') },
-      { label: 'Negociações', render: (p: SaaSPlan) => (p.features.negotiations ? 'Incluído' : 'Não') },
-      { label: 'Propostas', render: (p: SaaSPlan) => (p.features.proposals ? 'Incluído' : 'Não') },
-      { label: 'Documentos', render: (p: SaaSPlan) => (p.features.documents ? 'Incluído' : 'Não') },
-      { label: 'Gestão de equipe', render: (p: SaaSPlan) => (p.features.team ? 'Incluído' : 'Não') },
+      { label: 'Meu Site', render: (p: SaaSPlan) => (p.features.brokerSite ? 'Incluído' : '—') },
+      { label: 'Financeiro e negociações', render: (p: SaaSPlan) => (p.features.finance && p.features.negotiations ? 'Incluído' : '—') },
       { label: 'IA + WhatsApp', render: (p: SaaSPlan) => featureLabel('ai', p.features.ai) },
       { label: 'Domínio próprio', render: (p: SaaSPlan) => featureLabel('customDomain', p.features.customDomain) },
       { label: 'Relatórios', render: (p: SaaSPlan) => featureLabel('reports', p.features.reports) },
-      { label: 'Integrações', render: (p: SaaSPlan) => (p.features.integrations ? 'Incluído' : 'Não') },
-      { label: 'API / Webhooks', render: (p: SaaSPlan) => (p.features.api ? 'Elegível' : 'Não') },
       { label: 'Suporte', render: (p: SaaSPlan) => featureLabel('support', p.features.support) },
     ],
     []
@@ -113,9 +105,9 @@ function PlansPageInner() {
       <div className="space-y-8 p-4 md:p-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-foreground md:text-3xl">Planos e assinaturas</h1>
+            <h1 className="text-2xl font-bold text-foreground md:text-3xl">Planos</h1>
             <p className="text-sm text-muted-foreground">
-              Compare recursos e limites. Valores ainda não são finais.
+              Escolha o plano. A comparação abaixo mostra só o essencial.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -209,18 +201,18 @@ function PlansPageInner() {
           </div>
 
           <section className="space-y-4">
-            <h2 className="text-xl font-bold text-foreground">Comparação de recursos</h2>
+            <h2 className="text-xl font-bold text-foreground">O que muda entre os planos</h2>
             <div className="overflow-x-auto rounded-xl border border-border">
               <table className="min-w-full text-sm">
                 <thead className="bg-muted/40">
                   <tr>
-                    <th className="p-3 text-left">Recurso</th>
+                    <th className="p-3 text-left font-medium text-muted-foreground">Recurso</th>
                     {plans.map((p) => (
                       <th key={p.id} className="p-3 text-left whitespace-nowrap">
-                        {p.name}
+                        {p.name.replace('Plano ', '')}
                         {p.recommended ? (
                           <Badge className="ml-2" variant="primary">
-                            Recomendado
+                            Ideal
                           </Badge>
                         ) : null}
                       </th>

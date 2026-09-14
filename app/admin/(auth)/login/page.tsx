@@ -26,7 +26,7 @@ function AdminLoginForm() {
 
   useEffect(() => {
     if (showSeed) setEmail('admin@plataforma.com.br')
-    fetch('/api/auth/me')
+    fetch('/api/auth/me?realm=admin')
       .then((r) => r.json())
       .then((data) => {
         if (data?.ok && data.realm === 'admin') {
@@ -76,8 +76,7 @@ function AdminLoginForm() {
         router.replace('/admin/security/2fa?setup=1')
         return
       }
-      router.replace(data.redirectTo || '/paineladmin')
-      router.refresh()
+      window.location.assign(data.redirectTo || '/paineladmin')
     } catch {
       setError('Falha de rede. Tente novamente.')
     } finally {
@@ -104,8 +103,7 @@ function AdminLoginForm() {
         setError(data.error || 'Código inválido')
         return
       }
-      router.replace(data.redirectTo || '/paineladmin')
-      router.refresh()
+      window.location.assign(data.redirectTo || '/paineladmin')
     } catch {
       setError('Falha de rede. Tente novamente.')
     } finally {

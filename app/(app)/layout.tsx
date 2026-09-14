@@ -8,6 +8,7 @@ import { PlanRouteGuard } from '@/components/billing/plan-route-guard'
 import { RealtorPwaProvider } from '@/components/pwa/realtor-pwa-provider'
 import { detectDevice } from '@/lib/pwa'
 import { cachePublicSession } from '@/lib/auth'
+import { ensureFullPlanAccess } from '@/lib/phase14-data'
 
 export default function RealtorAppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -19,7 +20,7 @@ export default function RealtorAppLayout({ children }: { children: React.ReactNo
     let cancelled = false
     ;(async () => {
       try {
-        const res = await fetch('/api/auth/me', { credentials: 'same-origin' })
+        const res = await fetch('/api/auth/me?realm=app', { credentials: 'same-origin' })
         const data = await res.json()
         if (cancelled) return
         if (!res.ok || !data?.ok || data.realm !== 'app' || !['corretor', 'assistente'].includes(data.session?.role)) {
@@ -34,6 +35,7 @@ export default function RealtorAppLayout({ children }: { children: React.ReactNo
           realtorId: data.session.realtorId ?? null,
           realm: 'app',
         })
+        ensureFullPlanAccess(data.session.realtorId ?? 1)
         setReady(true)
         const d = detectDevice()
         const narrow = window.matchMedia('(max-width: 767px)').matches

@@ -1,21 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-
 /**
- * Banner permanente em produção: UI demo até baseline de segurança completa.
+ * Banner de demonstração — só aparece quando NEXT_PUBLIC_DEMO_MODE=true.
+ * Removido do layout raiz; mantido para uso opcional em ambientes de demo.
  */
 export function DemoSecurityBanner() {
-  const [show, setShow] = useState(false)
-
-  useEffect(() => {
-    const host = window.location.hostname
-    const isProdHost = host.includes('vercel.app') || host.includes('imovelhub')
-    const force = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
-    setShow(force || isProdHost || process.env.NODE_ENV === 'production')
-  }, [])
-
-  if (!show) return null
+  if (process.env.NEXT_PUBLIC_DEMO_MODE !== 'true') return null
 
   return (
     <div

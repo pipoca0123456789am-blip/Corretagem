@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Breadcrumbs } from '@/components/layout/breadcrumbs'
 import { Button } from '@/components/design-system/buttons/button'
 import { Alert } from '@/components/design-system/feedback/alert'
+import { SiteQrCode } from '@/components/meu-site/site-qr-code'
 import {
   copyToClipboard,
   getMeuSiteSettings,
@@ -27,7 +28,6 @@ export default function MeuSiteSharePage() {
   }, [])
 
   const properties = useMemo(() => getRealtorProperties(realtorId).slice(0, 6), [realtorId])
-  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(siteUrl || 'https://local')}`
 
   const copy = async (text: string, label: string) => {
     try {
@@ -56,13 +56,13 @@ export default function MeuSiteSharePage() {
 
         <section className="rounded-xl border border-border bg-card p-5">
           <h2 className="font-semibold text-foreground">Site completo</h2>
-          <p className="mt-1 break-all text-sm text-muted-foreground">{siteUrl}</p>
+          <p className="mt-1 break-all text-sm text-muted-foreground">{siteUrl || 'Carregando link…'}</p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button size="sm" onClick={() => copy(siteUrl, 'Link do site copiado')}>
+            <Button size="sm" onClick={() => copy(siteUrl, 'Link do site copiado')} disabled={!siteUrl}>
               Copiar link
             </Button>
             <a href={whatsappShareUrl(`Olá! Confira meus imóveis: ${siteUrl}`)} target="_blank" rel="noreferrer">
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="outline" disabled={!siteUrl}>
                 WhatsApp
               </Button>
             </a>
@@ -71,19 +71,25 @@ export default function MeuSiteSharePage() {
               target="_blank"
               rel="noreferrer"
             >
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="outline" disabled={!siteUrl}>
                 Facebook
               </Button>
             </a>
             <Button
               size="sm"
               variant="outline"
+              disabled={!siteUrl}
               onClick={() => copy(siteUrl, 'Link pronto para colar no Instagram')}
             >
               Instagram (copiar)
             </Button>
           </div>
-          <img src={qrSrc} alt="QR" className="mt-6 h-40 w-40 rounded-lg border border-border bg-white p-2" />
+          {siteUrl ? (
+            <div className="mt-6">
+              <SiteQrCode url={siteUrl} size={160} alt="QR Code do site" />
+              <p className="mt-2 text-xs text-muted-foreground">Escaneie para abrir o site do corretor.</p>
+            </div>
+          ) : null}
         </section>
 
         <section className="rounded-xl border border-border bg-card p-5">
@@ -92,7 +98,10 @@ export default function MeuSiteSharePage() {
             {properties.map((p) => {
               const url = getSitePublicUrl(slug, `/imovel/${p.slug}`)
               return (
-                <li key={p.id} className="flex flex-col gap-2 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
+                <li
+                  key={p.id}
+                  className="flex flex-col gap-2 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between"
+                >
                   <div>
                     <p className="font-medium text-foreground">{p.title}</p>
                     <p className="break-all text-xs text-muted-foreground">{url}</p>
@@ -107,7 +116,9 @@ export default function MeuSiteSharePage() {
                       </Button>
                     </a>
                     <Link href={url} target="_blank">
-                      <Button size="sm">Abrir</Button>
+                      <Button size="sm">
+                        Abrir
+                      </Button>
                     </Link>
                   </div>
                 </li>

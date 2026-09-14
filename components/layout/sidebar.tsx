@@ -10,9 +10,8 @@ import { LockedMenuItem, UpgradeLockModal } from '@/components/billing/feature-l
 
 const menuItems = [
   { label: 'Painel', href: '/dashboard' },
-  { label: 'Meus imóveis', href: '/imoveis' },
-  { label: 'Meus clientes', href: '/clientes' },
-  { label: 'CRM / Leads', href: '/crm' },
+  { label: 'Imóveis', href: '/imoveis' },
+  { label: 'Clientes', href: '/clientes' },
   { label: 'Agenda', href: '/agenda' },
   { label: 'Visitas', href: '/visitas' },
   { label: 'Negociações', href: '/negociacoes' },
@@ -77,8 +76,8 @@ export function Sidebar() {
                 pathname === item.href ||
                 (item.href.length > 1 && pathname.startsWith(`${item.href}/`)) ||
                 (item.href === '/imoveis' && pathname.startsWith('/properties')) ||
-                (item.href === '/clientes' && pathname.startsWith('/clients')) ||
-                (item.href === '/crm' && pathname.startsWith('/clients')) ||
+                (item.href === '/clientes' &&
+                  (pathname.startsWith('/clients') || pathname.startsWith('/crm'))) ||
                 (item.href === '/negociacoes' && pathname.startsWith('/negotiations')) ||
                 (item.href === '/financeiro' && pathname.startsWith('/financial')) ||
                 (item.href === '/minha-pagina' && pathname.startsWith('/professional')) ||

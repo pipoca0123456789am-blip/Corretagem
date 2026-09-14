@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Breadcrumbs } from '@/components/layout/breadcrumbs'
 import { MeuSiteNav } from '@/components/meu-site/meu-site-nav'
@@ -17,6 +17,7 @@ import {
   getSitePublicUrl,
   whatsappShareUrl,
 } from '@/lib/meu-site-data'
+import { SiteQrCode } from '@/components/meu-site/site-qr-code'
 import { getAppSession } from '@/lib/auth'
 import { getCurrentRealtorId } from '@/lib/phase7-data'
 import {
@@ -74,12 +75,6 @@ export default function MeuSiteOverviewPage() {
     const domain = getBrokerDomain(realtorId)
     setDomainLabel(domain?.status === 'active' || domain?.status === 'connected' ? domain.domain : 'Nenhum')
   }, [])
-
-  const qrSrc = useMemo(
-    () =>
-      `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(siteUrl || 'https://imovelhub.local')}`,
-    [siteUrl]
-  )
 
   const copy = async (text: string, label: string) => {
     try {
@@ -214,7 +209,7 @@ export default function MeuSiteOverviewPage() {
               </Link>
             </div>
             <div className="mt-6 flex items-center gap-4">
-              <img src={qrSrc} alt="QR Code do site" className="h-28 w-28 rounded-lg border border-border bg-white p-2" />
+              <SiteQrCode url={siteUrl} size={112} alt="QR Code do site" />
               <div className="text-sm text-muted-foreground">
                 <p className="font-medium text-foreground">QR Code</p>
                 <p>Aponte a câmera para abrir seu site.</p>

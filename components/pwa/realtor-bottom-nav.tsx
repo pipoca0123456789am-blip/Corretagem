@@ -15,12 +15,11 @@ import { detectDevice } from '@/lib/pwa'
 const primary = [
   { href: '/dashboard', label: 'Início', icon: Home },
   { href: '/imoveis', label: 'Imóveis', icon: Building2 },
-  { href: '/crm', label: 'Leads', icon: Users },
+  { href: '/clientes', label: 'Clientes', icon: Users },
   { href: '/agenda', label: 'Agenda', icon: CalendarDays },
 ]
 
 const moreLinks = [
-  { href: '/clientes', label: 'Clientes' },
   { href: '/negociacoes', label: 'Negociações' },
   { href: '/financeiro', label: 'Financeiro' },
   { href: '/meu-site', label: 'Meu Site' },
@@ -34,7 +33,7 @@ const moreLinks = [
 function isActive(pathname: string, href: string) {
   if (href === '/dashboard') return pathname === '/dashboard'
   if (href === '/imoveis') return pathname.startsWith('/imoveis') || pathname.startsWith('/properties')
-  if (href === '/crm') return pathname.startsWith('/crm') || pathname.startsWith('/clients')
+  if (href === '/clientes') return pathname.startsWith('/clientes') || pathname.startsWith('/clients') || pathname.startsWith('/crm')
   if (href === '/agenda') return pathname.startsWith('/agenda')
   return pathname === href || pathname.startsWith(`${href}/`)
 }

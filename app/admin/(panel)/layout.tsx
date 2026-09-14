@@ -26,7 +26,7 @@ export default function AdminPanelLayout({ children }: { children: React.ReactNo
             return
           }
         }
-        const res = await fetch('/api/auth/me', { credentials: 'same-origin' })
+        const res = await fetch('/api/auth/me?realm=admin', { credentials: 'same-origin' })
         const data = await res.json()
         if (cancelled) return
         const adminRoles = ['super_admin', 'admin', 'suporte', 'financeiro']

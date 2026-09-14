@@ -614,10 +614,47 @@ export function featureLabel(
   return labels[String(value)] || String(value)
 }
 
+/**
+ * Garante assinatura Premium ativa no browser (acesso completo ao painel).
+ * Enquanto o billing real não existir, libera o menu/rotas sem locks.
+ */
+export function ensureFullPlanAccess(realtorId?: number | null): Subscription | null {
+  if (typeof window === 'undefined') return null
+  const id = realtorId ?? getCurrentRealtorId() ?? 1
+  const existing = getRealtorSubscription(id)
+  const now = new Date()
+  const renews = new Date(now)
+  renews.setFullYear(renews.getFullYear() + 1)
+
+  if (existing?.planId === 'premium' && existing.status === 'ativa') {
+    return existing
+  }
+
+  return upsertSubscription({
+    id: existing?.id || `sub-full-${id}`,
+    realtorId: id,
+    realtorName: existing?.realtorName || 'Corretor',
+    planId: 'premium',
+    status: 'ativa',
+    paymentStatus: 'aprovado',
+    billingCycle: existing?.billingCycle || 'anual',
+    startedAt: existing?.startedAt || now.toISOString(),
+    renewsAt: renews.toISOString(),
+    propertiesUsed: existing?.propertiesUsed ?? 0,
+    usersUsed: existing?.usersUsed ?? 1,
+    campaignsUsed: existing?.campaignsUsed ?? 0,
+    addons: existing?.addons || [],
+    history: [
+      ...(existing?.history || []),
+      { id: `h-full-${Date.now()}`, label: 'Acesso Premium liberado', at: now.toISOString() },
+    ],
+  })
+}
+
 /** Plano efetivo para checagem de recursos (trial → profissional; limitado → essencial). */
 export function getEffectivePlanId(sub?: Subscription | null): PlanId {
   const subscription = sub ?? getRealtorSubscription()
-  if (!subscription) return 'essencial'
+  if (!subscription) return 'premium'
   if (subscription.status === 'trial') return 'profissional'
   if (subscription.status === 'limitado') return 'essencial'
   if (subscription.status === 'adequacao' && subscription.pendingPlanId) {

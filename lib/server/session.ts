@@ -115,9 +115,17 @@ export function sessionCookieOptions(maxAge: number) {
   }
 }
 
-/** Define cookie de sessão (Route Handlers / Server Actions). */
+/**
+ * Define cookie de sessão (Route Handlers / Server Actions).
+ * Limpa cookies dos outros realms — cookies cruzados fazem /api/auth/me
+ * priorizar admin e o layout do corretor redirecionar em loop para /login.
+ */
 export async function setSessionCookie(realm: AuthRealm, token: string, maxAge: number) {
   const jar = await cookies()
+  const clearOpts = { ...sessionCookieOptions(0), maxAge: 0 }
+  for (const other of ['admin', 'app', 'client'] as AuthRealm[]) {
+    if (other !== realm) jar.set(cookieName(other), '', clearOpts)
+  }
   jar.set(cookieName(realm), token, sessionCookieOptions(maxAge))
 }
 

@@ -209,7 +209,7 @@ export async function syncClientSessionFromServer(
   realtorSlugHint?: string
 ): Promise<ClientProfileCache | null> {
   try {
-    const res = await fetch('/api/auth/me', { credentials: 'same-origin' })
+    const res = await fetch('/api/auth/me?realm=client', { credentials: 'same-origin' })
     if (!res.ok) {
       clearProfileCache()
       return null
@@ -221,7 +221,6 @@ export async function syncClientSessionFromServer(
       user?: { id: string; email: string; name: string }
     }
     if (!data.ok || data.realm !== 'client' || !data.session) {
-      if (data.realm === 'admin') return null
       clearProfileCache()
       return null
     }

@@ -1,6 +1,5 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { DemoSecurityBanner } from '@/components/security/demo-banner'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -51,7 +50,6 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="bg-background">
       <body className="antialiased bg-background text-foreground">
-        <DemoSecurityBanner />
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

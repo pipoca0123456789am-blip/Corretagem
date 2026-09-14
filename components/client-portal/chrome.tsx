@@ -130,15 +130,21 @@ export function ClientPortalLayout({ children }: { children: React.ReactNode }) 
       }
       let adminFromServer = false
       try {
-        const res = await fetch('/api/auth/me', { credentials: 'same-origin' })
+        const res = await fetch('/api/auth/me?realm=admin', { credentials: 'same-origin' })
         if (res.ok) {
           const data = (await res.json()) as { ok?: boolean; realm?: string }
           if (data.ok && data.realm === 'admin') adminFromServer = true
-          if (data.ok && data.realm === 'client') {
+        }
+        if (!adminFromServer) {
+          const clientRes = await fetch('/api/auth/me?realm=client', { credentials: 'same-origin' })
+          if (clientRes.ok) {
+            const data = (await clientRes.json()) as { ok?: boolean; realm?: string }
+            if (data.ok && data.realm === 'client') {
+              await syncClientSessionFromServer(slug)
+            }
+          } else {
             await syncClientSessionFromServer(slug)
           }
-        } else {
-          await syncClientSessionFromServer(slug)
         }
       } catch {
         await syncClientSessionFromServer(slug)

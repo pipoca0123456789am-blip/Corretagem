@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { readSession } from '@/lib/server/session'
 import { findUserById, toPublicUser, getUsersStoreBackend } from '@/lib/server/users'
 import { isProductionRuntime } from '@/lib/server/secrets'
+import type { AuthRealm } from '@/lib/server/users'
 
 function sessionPayload(session: {
   sub?: string
@@ -19,47 +20,31 @@ function sessionPayload(session: {
   }
 }
 
-export async function GET() {
-  const admin = await readSession('admin')
-  if (admin) {
-    const user = await findUserById(admin.sub!)
-    if (user && user.status === 'ativo') {
-      return NextResponse.json({
-        ok: true,
-        realm: 'admin',
-        session: sessionPayload(admin),
-        user: toPublicUser(user),
-        ...(!isProductionRuntime() ? { storeBackend: getUsersStoreBackend() } : {}),
-      })
-    }
-  }
+async function resolveRealm(realm: AuthRealm) {
+  const session = await readSession(realm)
+  if (!session) return null
+  const user = await findUserById(session.sub!)
+  if (!user || user.status !== 'ativo') return null
+  return { session, user }
+}
 
-  const app = await readSession('app')
-  if (app) {
-    const user = await findUserById(app.sub!)
-    if (user && user.status === 'ativo') {
-      return NextResponse.json({
-        ok: true,
-        realm: 'app',
-        session: sessionPayload(app),
-        user: toPublicUser(user),
-        ...(!isProductionRuntime() ? { storeBackend: getUsersStoreBackend() } : {}),
-      })
-    }
-  }
+export async function GET(request: Request) {
+  const prefer = new URL(request.url).searchParams.get('realm')
+  const order: AuthRealm[] =
+    prefer === 'admin' || prefer === 'app' || prefer === 'client'
+      ? [prefer]
+      : ['admin', 'app', 'client']
 
-  const client = await readSession('client')
-  if (client) {
-    const user = await findUserById(client.sub!)
-    if (user && user.status === 'ativo') {
-      return NextResponse.json({
-        ok: true,
-        realm: 'client',
-        session: sessionPayload(client),
-        user: toPublicUser(user),
-        ...(!isProductionRuntime() ? { storeBackend: getUsersStoreBackend() } : {}),
-      })
-    }
+  for (const realm of order) {
+    const hit = await resolveRealm(realm)
+    if (!hit) continue
+    return NextResponse.json({
+      ok: true,
+      realm,
+      session: sessionPayload(hit.session),
+      user: toPublicUser(hit.user),
+      ...(!isProductionRuntime() ? { storeBackend: getUsersStoreBackend() } : {}),
+    })
   }
 
   return NextResponse.json({ ok: false }, { status: 401 })
