@@ -20,7 +20,7 @@ import {
   requireTenantRealtorId,
   AuthError,
 } from '@/lib/server/policies'
-import { isAdminRole } from '@/lib/server/users'
+import { isAdminRole, listActiveClientUsers } from '@/lib/server/users'
 import type { UserRole } from '@/lib/server/users'
 import { appendAuditLog } from '@/lib/server/audit-log'
 
@@ -34,7 +34,16 @@ export function serializeClient(c: DemoClient) {
 }
 
 export function serializeLead(l: DemoLead) {
-  return { id: l.id, name: l.name, source: l.source, realtorId: l.realtorId }
+  return {
+    id: l.id,
+    name: l.name,
+    email: l.email || '',
+    phone: l.phone || '',
+    source: l.source,
+    status: l.status || 'novo',
+    createdAt: l.createdAt || '',
+    realtorId: l.realtorId,
+  }
 }
 
 export function serializeDocument(d: DemoDocument) {
@@ -59,12 +68,38 @@ export function listDocumentsForSession(session: SessionClaims) {
   return listDocumentsForTenant(tenantId).map(serializeDocument)
 }
 
-export function listLeadsForSession(session: SessionClaims) {
+export async function listLeadsForSession(session: SessionClaims) {
   if (isAdminRole(session.role as UserRole)) {
-    return listLeadsForAdmin().map(serializeLead)
+    const clients = await listActiveClientUsers()
+    return [
+      ...listLeadsForAdmin().map(serializeLead),
+      ...clients.map((client) => ({
+        id: `client-${client.id}`,
+        name: client.name,
+        email: client.email,
+        phone: '',
+        source: 'Cadastro no portal do corretor',
+        status: 'novo' as const,
+        createdAt: client.createdAt,
+        realtorId: client.realtorId,
+      })),
+    ]
   }
   const tenantId = requireTenantRealtorId(session)
-  return listLeadsForBroker(tenantId).map(serializeLead)
+  const clients = await listActiveClientUsers(tenantId)
+  return [
+    ...listLeadsForBroker(tenantId).map(serializeLead),
+    ...clients.map((client) => ({
+      id: `client-${client.id}`,
+      name: client.name,
+      email: client.email,
+      phone: '',
+      source: 'Cadastro no portal do corretor',
+      status: 'novo' as const,
+      createdAt: client.createdAt,
+      realtorId: client.realtorId,
+    })),
+  ]
 }
 
 export function getPropertyForSession(session: SessionClaims, id: string) {

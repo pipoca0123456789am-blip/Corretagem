@@ -93,6 +93,26 @@ export async function findUserById(id: string): Promise<ServerUser | null> {
   return users.find((u) => u.id === id) || null
 }
 
+export async function listActiveClientUsers(realtorId?: number) {
+  const users = await ensureStore()
+  return users
+    .filter(
+      (user): user is ServerUser & { realtorId: number } =>
+        user.role === 'cliente' &&
+        user.status === 'ativo' &&
+        user.realtorId !== null &&
+        (realtorId === undefined || user.realtorId === realtorId)
+    )
+    .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+    .map(({ id, name, email, realtorId: userRealtorId, createdAt }) => ({
+      id,
+      name,
+      email,
+      realtorId: userRealtorId,
+      createdAt,
+    }))
+}
+
 export async function authenticateUser(
   email: string,
   password: string

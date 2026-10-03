@@ -20,6 +20,7 @@ const primary = [
 ]
 
 const moreLinks = [
+  { href: '/crm', label: 'CRM' },
   { href: '/negociacoes', label: 'Negociações' },
   { href: '/financeiro', label: 'Financeiro' },
   { href: '/meu-site', label: 'Meu Site' },
@@ -33,7 +34,8 @@ const moreLinks = [
 function isActive(pathname: string, href: string) {
   if (href === '/dashboard') return pathname === '/dashboard'
   if (href === '/imoveis') return pathname.startsWith('/imoveis') || pathname.startsWith('/properties')
-  if (href === '/clientes') return pathname.startsWith('/clientes') || pathname.startsWith('/clients') || pathname.startsWith('/crm')
+  if (href === '/clientes') return pathname.startsWith('/clientes') || pathname.startsWith('/clients')
+  if (href === '/crm') return pathname.startsWith('/crm')
   if (href === '/agenda') return pathname.startsWith('/agenda')
   return pathname === href || pathname.startsWith(`${href}/`)
 }

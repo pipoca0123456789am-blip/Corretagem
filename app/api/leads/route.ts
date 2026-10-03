@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     ) {
       const user = await findUserById(admin.sub!)
       if (!user || user.status !== 'ativo') throw new AuthError('Sessão inválida', 401)
-      const items = listLeadsForSession(admin)
+      const items = await listLeadsForSession(admin)
       await auditTenantRead(admin, 'leads', clientIp(request))
       return NextResponse.json({ ok: true, scope: 'admin', items })
     }
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
       throw new AuthError('Permissão insuficiente', 403)
     }
     const tenantId = requireTenantRealtorId(session)
-    const items = listLeadsForSession(session)
+    const items = await listLeadsForSession(session)
     await auditTenantRead(session, 'leads', clientIp(request))
     return NextResponse.json({
       ok: true,

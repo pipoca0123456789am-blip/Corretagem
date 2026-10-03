@@ -90,7 +90,6 @@ const nextConfig = {
       { source: '/imoveis/:path*', destination: '/properties/:path*', permanent: false },
       { source: '/clientes', destination: '/clients', permanent: false },
       { source: '/clientes/:path*', destination: '/clients/:path*', permanent: false },
-      { source: '/crm', destination: '/clients', permanent: false },
       { source: '/negociacoes', destination: '/negotiations', permanent: false },
       { source: '/negociacoes/:path*', destination: '/negotiations/:path*', permanent: false },
       { source: '/financeiro', destination: '/financial', permanent: false },

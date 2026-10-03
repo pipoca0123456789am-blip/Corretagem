@@ -11,6 +11,7 @@ const ALLOWED_PREFIXES = [
   '/properties',
   '/clientes',
   '/clients',
+  '/crm',
   '/meu-site',
   '/plans',
   '/assinatura',

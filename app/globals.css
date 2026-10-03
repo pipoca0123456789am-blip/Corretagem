@@ -233,6 +233,75 @@
   }
 }
 
+.dark .admin-dashboard {
+  background-color: #05070c;
+  color: #f1f5f9;
+}
+
+.dark .admin-dashboard [class~='bg-white'],
+.dark .admin-dashboard [class~='bg-white/90'] {
+  background-color: #111827 !important;
+}
+
+.dark .admin-dashboard [class~='bg-slate-50'] {
+  background-color: #0b1220 !important;
+}
+
+.dark .admin-dashboard [class~='bg-slate-50/70'] {
+  background-color: #0b1220 !important;
+}
+
+.dark .admin-dashboard [class~='bg-slate-100'] {
+  background-color: #1e293b !important;
+}
+
+.dark .admin-dashboard [class~='bg-slate-200'] {
+  background-color: #334155 !important;
+}
+
+.dark .admin-dashboard [class~='text-slate-950'],
+.dark .admin-dashboard [class~='text-slate-900'] {
+  color: #f8fafc !important;
+}
+
+.dark .admin-dashboard [class~='text-slate-700'] {
+  color: #e2e8f0 !important;
+}
+
+.dark .admin-dashboard [class~='text-slate-600'] {
+  color: #cbd5e1 !important;
+}
+
+.dark .admin-dashboard [class~='text-slate-500'] {
+  color: #94a3b8 !important;
+}
+
+.dark .admin-dashboard [class~='text-slate-400'],
+.dark .admin-dashboard [class~='text-slate-300'] {
+  color: #64748b !important;
+}
+
+.dark .admin-dashboard [class~='border-slate-100'],
+.dark .admin-dashboard [class~='border-slate-200'] {
+  border-color: #273449 !important;
+}
+
+.dark .admin-dashboard [class~='border-slate-300'] {
+  border-color: #475569 !important;
+}
+
+.dark .admin-dashboard [class~='hover:bg-amber-50/40']:hover {
+  background-color: rgb(245 158 11 / 8%) !important;
+}
+
+.dark .admin-dashboard svg[aria-label='Gráfico de receita mensal confirmada por faturas pagas'] line {
+  stroke: #334155;
+}
+
+.dark .admin-dashboard svg[aria-label='Gráfico de receita mensal confirmada por faturas pagas'] text {
+  fill: #94a3b8;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

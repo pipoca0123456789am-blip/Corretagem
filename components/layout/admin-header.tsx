@@ -2,10 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Shield } from 'lucide-react'
+import { Moon, Shield, Sun } from 'lucide-react'
 import { getAdminSession, logoutAdmin } from '@/lib/auth'
 
-export function AdminHeader() {
+export function AdminHeader({
+  darkTheme,
+  onToggleTheme,
+}: {
+  darkTheme: boolean
+  onToggleTheme: () => void
+}) {
   const [name, setName] = useState('Admin')
   const [email, setEmail] = useState('')
 
@@ -32,6 +38,17 @@ export function AdminHeader() {
             <p className="text-sm font-medium text-white">{name}</p>
             <p className="text-xs text-slate-400">{email}</p>
           </div>
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            aria-label={darkTheme ? 'Ativar tema claro' : 'Ativar tema preto'}
+            aria-pressed={darkTheme}
+            title={darkTheme ? 'Ativar tema claro' : 'Ativar tema preto'}
+            className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-700 px-3 text-xs font-medium text-slate-200 transition hover:bg-slate-800"
+          >
+            {darkTheme ? <Sun className="h-4 w-4 text-amber-300" /> : <Moon className="h-4 w-4" />}
+            <span className="hidden sm:inline">{darkTheme ? 'Tema claro' : 'Tema preto'}</span>
+          </button>
           <Link
             href="/admin/configuracoes"
             className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-800"

@@ -23,6 +23,10 @@ export interface DemoLead {
   name: string
   source: string
   realtorId: number | null
+  email?: string
+  phone?: string
+  status?: 'novo'
+  createdAt?: string
   /** null = lead de plataforma (só admin) */
 }
 

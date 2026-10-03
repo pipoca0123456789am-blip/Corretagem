@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, 'security/**']
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security-gate:
+    name: Security gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Security unit tests
+        # Sem secrets: testes usam AUTH_SECRET de fixture / defaults de DEV
+        run: pnpm test
+
+      - name: Typecheck security surface
+        # Gate duro: lib/server + app/api + middleware (não o app UI legado)
+        run: pnpm typecheck:security
+
+      - name: Full typecheck
+        run: pnpm typecheck
+
+      - name: Production build
+        env:
+          # Build não exige DB/Redis/e-mail; adapters caem para memory/console
+          AUTH_SECRET: ci-build-only-not-for-production-use-32chars
+        run: pnpm build

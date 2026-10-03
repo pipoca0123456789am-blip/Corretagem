@@ -10,6 +10,19 @@ export default function AdminPanelLayout({ children }: { children: React.ReactNo
   const router = useRouter()
   const pathname = usePathname()
   const [ready, setReady] = useState(false)
+  const [darkTheme, setDarkTheme] = useState(false)
+
+  useEffect(() => {
+    setDarkTheme(window.localStorage.getItem('ih_admin_theme') === 'black')
+  }, [])
+
+  const toggleTheme = () => {
+    setDarkTheme((current) => {
+      const next = !current
+      window.localStorage.setItem('ih_admin_theme', next ? 'black' : 'light')
+      return next
+    })
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -61,11 +74,13 @@ export default function AdminPanelLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100">
+    <div className={`admin-theme-root flex min-h-screen bg-slate-950 text-slate-100 ${darkTheme ? 'dark' : ''}`}>
       <AdminSidebar />
       <div className="flex min-h-screen flex-1 flex-col md:ml-64">
-        <AdminHeader />
-        <main className="flex-1 overflow-y-auto bg-slate-900/40">{children}</main>
+        <AdminHeader darkTheme={darkTheme} onToggleTheme={toggleTheme} />
+        <main className={`flex-1 overflow-y-auto bg-slate-900/40 ${darkTheme ? 'dark:bg-slate-950' : ''}`}>
+          {children}
+        </main>
       </div>
     </div>
   )
